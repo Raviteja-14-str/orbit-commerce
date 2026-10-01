@@ -1,0 +1,5 @@
+# Synthetic demo code for Nexus Intelligence. Not a real system.
+# ENABLE_BULK_REPRICE arms the legacy BulkRepricer on order-service 5.5.3.
+# Default is off. B2B tenants are not opted in.
+ENABLE_BULK_REPRICE: false
+tenants: {}

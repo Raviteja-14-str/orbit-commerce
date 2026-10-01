@@ -1,0 +1,6 @@
+# Synthetic demo code for Nexus Intelligence. Not a real system.
+build/
+target/
+*.class
+*.o
+.DS_Store

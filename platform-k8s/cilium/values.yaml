@@ -1,0 +1,8 @@
+# Synthetic demo code for Nexus Intelligence. Not a real system.
+cilium:
+  version: 1.16.4
+cluster:
+  kubernetes: "1.31"
+# Pod routes are installed via the cilium_host device. They are foreign routes
+# to systemd-networkd; a networkd restart drops them.
+podCidrExample: 10.244.18.0/24

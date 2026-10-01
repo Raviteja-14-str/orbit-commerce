@@ -1,0 +1,5 @@
+# Synthetic demo code for Nexus Intelligence. Not a real system.
+replicaCount: 48
+image: order-events-router:4.8.0
+nodeImage: orbit-node:2026.09.1
+heapMb: 4096

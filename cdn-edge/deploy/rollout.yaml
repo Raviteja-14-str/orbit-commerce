@@ -1,0 +1,6 @@
+# Synthetic demo code for Nexus Intelligence. Not a real system.
+# edge-rules rollout. Staged bundles visit a canary PoP before the other 39.
+mode: staged
+pops: 40
+canary: true
+bundle: 2026.10.01-r1
