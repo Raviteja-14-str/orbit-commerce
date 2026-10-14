@@ -14,7 +14,6 @@ import { placeOrder } from "../checkout/src/place-order.ts";
 import { INVENTORY_HOST, reserveStock } from "../checkout/src/reserve-stock.ts";
 import { collectColumns, columnQuery, formatBuilderLog } from "../risk-feature-builder/src/build-features.ts";
 import { onHand, syncStock } from "../inventory/src/stock.ts";
-import { nextPlan } from "../dns-planner/src/planner.ts";
 import { DnsState, Worker } from "../dns-sync/src/worker.ts";
 import { buildInfo } from "../order-service/src/build-info.ts";
 import { handleOrder } from "../order-service/src/router.ts";
@@ -93,18 +92,45 @@ test("dns failure is reported as OUT_OF_STOCK", () => {
   assert.equal(INVENTORY_HOST, "inventory.svc.orbit.internal");
 });
 
-test("dns-sync 2.2.0 does not publish a stale plan or delete a live record", () => {
+test("dns-sync 2.3.0 can publish a stale plan and then empty inventory.svc", () => {
   const state = new DnsState();
-  const fast = new Worker("az-a", state);
+  state.latestApplied = 18450;
   const slow = new Worker("az-b", state);
-  const planNew = nextPlan(18466, { "inventory.svc": ["10.1.0.1"] });
-  assert.equal(planNew.gen, 18467);
-  fast.applyAll({ gen: 18467, endpoints: { "inventory.svc": ["10.1.0.1"] } }, "03:11:58Z");
-  const wrote = slow.applyEndpoint({ gen: 18452, endpoints: { "inventory.svc": ["10.0.0.9"] } }, "inventory.svc", "03:12:07Z");
-  assert.equal(wrote, false);
-  assert.deepEqual(state.endpoints.get("inventory.svc")?.addrs, ["10.1.0.1"]);
-  slow.cleanup(18467, "03:12:08Z");
-  assert.deepEqual(state.endpoints.get("inventory.svc")?.addrs, ["10.1.0.1"]);
+  const fast = new Worker("az-a", state);
+  const repair = new Worker("az-c", state);
+  assert.equal(slow.start({ gen: 18452, endpoints: { "inventory.svc": ["10.0.0.9"] } }, "02:53:14Z"), true);
+  assert.match(state.logs[0], /worker=az-b plan=18452 freshness_check=ok \(latest_applied=18450\) starting/);
+  slow.conflict("inventory.svc", 47, "02:58:40Z");
+  for (let gen = 18440; gen <= 18458; gen += 1) {
+    if (!state.plans.has(gen)) {
+      state.plans.set(gen, { gen, endpoints: {} });
+    }
+  }
+  fast.applyAll(
+    { gen: 18467, endpoints: Object.fromEntries([["inventory.svc", ["10.1.0.1"]]]) },
+    "03:11:58Z",
+  );
+  assert.ok(state.logs.some((line) => line.includes("worker=az-a plan=18467 applied endpoints=")));
+  const wrote = slow.applyEndpoint(
+    { gen: 18452, endpoints: { "inventory.svc": ["10.0.0.9"] } },
+    "inventory.svc",
+    "03:12:07Z",
+  );
+  assert.equal(wrote, true);
+  assert.match(state.logs.at(-1) ?? "", /worker=az-b plan=18452 applied endpoint=inventory.svc/);
+  fast.cleanup(18467, "03:12:08Z");
+  assert.match(state.logs.at(-1) ?? "", /worker=az-a cleanup deleted_plans=\[18440\.\.18458\]/);
+  assert.equal(state.endpoints.has("inventory.svc"), false);
+  const repaired = repair.applyEndpoint(
+    { gen: 18468, endpoints: { "inventory.svc": ["10.1.0.2"] } },
+    "inventory.svc",
+    "03:13:00Z",
+  );
+  assert.equal(repaired, false);
+  assert.match(
+    state.logs.at(-1) ?? "",
+    /worker=az-c ERROR cannot apply plan 18468: active plan 18452 for inventory.svc not found; refusing \(state inconsistent\)/,
+  );
 });
 
 test("feature builder query is scoped to the current database", () => {

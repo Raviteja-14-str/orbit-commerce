@@ -19,12 +19,17 @@ export class DnsState {
 }
 
 /**
- * dns-sync 2.2.0. One active worker. Freshness is checked again at apply time,
- * and cleanup will not delete a plan that still owns a live record set.
+ * dns-sync 2.3.0. Workers in az-a, az-b, and az-c apply plans active-active.
+ * Freshness is checked once, when the worker starts a plan. applyEndpoint does
+ * not check again, so a worker that was fresh at start can publish a generation
+ * that a faster worker has already superseded. cleanup then deletes that plan
+ * and the record set it owns, and will not put the newer records back.
  */
 export class Worker {
   name: string;
   state: DnsState;
+  /** Set after the first freshness check. Later applies do not repeat it. */
+  private freshnessChecked = false;
 
   constructor(name: string, state: DnsState) {
     this.name = name;
@@ -32,16 +37,19 @@ export class Worker {
   }
 
   start(plan: Plan, ts: string): boolean {
-    if (plan.gen < this.state.latestApplied) {
+    if (!this.freshnessChecked) {
+      if (plan.gen < this.state.latestApplied) {
+        this.state.logs.push(
+          `${ts} worker=${this.name} plan=${plan.gen} rejected stale (latest_applied=${this.state.latestApplied})`,
+        );
+        return false;
+      }
       this.state.logs.push(
-        `${ts} worker=${this.name} plan=${plan.gen} rejected stale (latest_applied=${this.state.latestApplied})`,
+        `${ts} worker=${this.name} plan=${plan.gen} freshness_check=ok (latest_applied=${this.state.latestApplied}) starting`,
       );
-      return false;
+      this.freshnessChecked = true;
     }
     this.state.plans.set(plan.gen, plan);
-    this.state.logs.push(
-      `${ts} worker=${this.name} plan=${plan.gen} freshness_check=ok (latest_applied=${this.state.latestApplied}) starting`,
-    );
     return true;
   }
 
@@ -62,14 +70,21 @@ export class Worker {
     return true;
   }
 
-  /** Re-checks freshness. A plan that lost the race is not written. */
+  /**
+   * Publish one endpoint. The generation is not compared with latestApplied.
+   * If cleanup has already removed the plan recorded as active, refuse rather
+   * than repair the record set.
+   */
   applyEndpoint(plan: Plan, endpoint: string, ts: string): boolean {
+    const active = this.state.activePlan.get(endpoint);
+    if (active !== undefined && !this.state.plans.has(active)) {
+      this.state.logs.push(
+        `${ts} worker=${this.name} ERROR cannot apply plan ${plan.gen}: active plan ${active} for ${endpoint} not found; refusing (state inconsistent)`,
+      );
+      return false;
+    }
     if (!this.state.plans.has(plan.gen)) {
       this.state.plans.set(plan.gen, plan);
-    }
-    if (plan.gen < this.state.latestApplied) {
-      this.state.logs.push(`${ts} worker=${this.name} plan=${plan.gen} skipped stale endpoint=${endpoint}`);
-      return false;
     }
     if (!this.publish(plan, endpoint)) {
       return false;
@@ -97,8 +112,9 @@ export class Worker {
   }
 
   /**
-   * Delete plan objects older than (newestGen - 8) when they do not own a live endpoint.
-   * Live record sets are left in place.
+   * Delete every plan older than (newestGen - 8). Record sets those plans own
+   * are removed with them, including a record a slower worker just published.
+   * The newer plan's addresses are not restored, so the name can go empty.
    */
   cleanup(newestGen: number, ts: string): number[] {
     const threshold = newestGen - 8;
@@ -108,14 +124,10 @@ export class Worker {
       if (gen >= threshold) {
         continue;
       }
-      let ownsLive = false;
-      for (const record of this.state.endpoints.values()) {
+      for (const [name, record] of [...this.state.endpoints.entries()]) {
         if (record.ownerGen === gen) {
-          ownsLive = true;
+          this.state.endpoints.delete(name);
         }
-      }
-      if (ownsLive) {
-        continue;
       }
       this.state.plans.delete(gen);
       deleted.push(gen);
