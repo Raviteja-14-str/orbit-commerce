@@ -16,3 +16,8 @@ export function boot(sessionReady: boolean): { event: "app_started" | "not_start
 export function heartbeat(version: string, seq: number): string {
   return `pos heartbeat seq=${seq} version=${version} event=app_started`;
 }
+
+/** Customer-display receipt line. Layout only; no drivers and no boot path. */
+export function receiptLine(merchant: string, total: string): string {
+  return `${merchant} receipt total ${total}`;
+}
