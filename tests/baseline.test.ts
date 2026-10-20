@@ -190,5 +190,10 @@ test("catalog, search, tenant delete, pos boot, cilium route", () => {
   const limits = readFileSync("platform-k8s/orbit-node/limits.conf", "utf8");
   assert.match(limits, /nproc 32768/);
   const image = readFileSync("platform-k8s/orbit-node/Dockerfile", "utf8");
-  assert.match(image, /Unattended package upgrades are not enabled/);
+  assert.match(image, /2026\.10\.2/);
+  const timer = readFileSync("platform-k8s/orbit-node/systemd/apt-daily-upgrade.timer.conf", "utf8");
+  assert.match(timer, /OnCalendar=\*-\*-\* 06:00:00 UTC/);
+  assert.match(timer, /RandomizedDelaySec=0/);
+  const hook = readFileSync("platform-k8s/orbit-node/networkd/lxc-health-foreign-routes.sh", "utf8");
+  assert.match(hook, /lxc_health: Lost carrier; removing foreign routes/);
 });

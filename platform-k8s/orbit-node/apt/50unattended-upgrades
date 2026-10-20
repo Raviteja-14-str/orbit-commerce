@@ -1,0 +1,9 @@
+# Synthetic demo code for Nexus Intelligence. Not a real system.
+Unattended-Upgrade::Allowed-Origins {
+    "${distro_id}:${distro_codename}-security";
+};
+Unattended-Upgrade::Automatic-Reboot "false";
+# systemd security updates are applied in place. Restarting systemd-networkd
+# drops foreign routes, including pod CIDRs via cilium_host.
+Unattended-Upgrade::Package-Blacklist {
+};
