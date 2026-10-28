@@ -47,7 +47,7 @@ test("edge budget failure names the rule and stays on simulate semantics", () =>
   assert.equal(outcome.upstream, "none");
   assert.equal(outcome.logs[0], formatWafTimeout(ts, 17, WAF_EVAL_BUDGET_MS, "shop.northwind.example"));
   assert.equal(outcome.logs[1], formatWaf502("14:42:13.402Z", 17, "ORB-WAF-1001", "simulate"));
-  assert.equal(outcome.version, "7.12.0");
+  assert.equal(outcome.version, "7.12.1");
   assert.equal(rules.some((rule) => rule.id === "ORB-WAF-1187"), false);
 });
 

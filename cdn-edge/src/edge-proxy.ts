@@ -20,6 +20,14 @@ export interface ProxyRequest {
   worker: number;
 }
 
+/** Reject a NUL in the Host header before WAF. Shipped in edge-proxy 7.12.1. */
+export function parseHost(host: string): string {
+  if (host.includes("\0")) {
+    throw new Error("invalid host");
+  }
+  return host.trim().toLowerCase();
+}
+
 /** edge-proxy process. WAF runs before any origin connection. */
 export function handleProxyRequest(rules: WafRule[], request: ProxyRequest, deps: EvalDeps, ts: string) {
   const input: EvalInput = {
