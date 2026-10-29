@@ -1,0 +1,26 @@
+# Synthetic demo code for Nexus Intelligence. Not a real system.
+# pricing-service 4.18.2. Restart is immediate: minReadySeconds 0 and no
+# extra backoff, so a crash loop brings replicas back in the same second.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pricing-service
+  labels:
+    app: pricing-service
+    version: 4.18.2
+spec:
+  minReadySeconds: 0
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 100%
+      maxSurge: 100%
+  template:
+    spec:
+      terminationGracePeriodSeconds: 0
+      containers:
+        - name: pricing-service
+          image: pricing-service:4.18.2
+          env:
+            - name: PRICING_PROMO_V2_ENABLED
+              value: "true"

@@ -10,9 +10,10 @@ check-node:
 check-java:
 	mkdir -p build/classes
 	find . -path ./build -prune -o -name '*.java' -print | sort > build/java-sources.txt
-	javac --release 21 -d build/classes @build/java-sources.txt
+	javac -g --release 21 -d build/classes @build/java-sources.txt
 	java -cp build/classes com.orbit.events.PeerSyncTest
 	java -cp build/classes com.orbit.pricing.PriceEngineTest
+	java -cp build/classes com.orbit.pricing.RegionalCapTest
 
 check-rust:
 	cargo test --manifest-path payments-gateway/Cargo.toml --quiet
