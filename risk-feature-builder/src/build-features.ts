@@ -11,19 +11,20 @@ export interface SchemaView {
 }
 
 /**
- * 1.8.0 scopes system.columns to the current database.
- * Replica schemas the role cannot name are not part of the result.
+ * 1.9.2 reads system.columns for txn_features and does not filter by database.
+ * system.columns lists every database the role can see. When the role can also
+ * see the replica schema analytics_r0, the same table name is returned twice
+ * (plus replica-only columns) and the feature file grows past the gateway's
+ * preallocated limit of 200. The builder runs every 5 minutes on one warehouse
+ * node (wh-1 .. wh-6), so the file flaps until every node has the grant.
  */
 export function columnQuery(): string {
-  return "SELECT name, type FROM system.columns WHERE database = currentDatabase() AND table = 'txn_features' ORDER BY name";
+  return "SELECT name, type FROM system.columns WHERE table = 'txn_features' ORDER BY name";
 }
 
-export function collectColumns(visible: SchemaView[], currentDatabase: string): Column[] {
+export function collectColumns(visible: SchemaView[]): Column[] {
   const rows: Column[] = [];
   for (const schema of visible) {
-    if (schema.database !== currentDatabase) {
-      continue;
-    }
     rows.push(...schema.columns);
   }
   return rows;

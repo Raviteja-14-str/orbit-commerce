@@ -134,22 +134,23 @@ test("dns-sync 2.3.0 can publish a stale plan and then empty inventory.svc", () 
   );
 });
 
-test("feature builder query is scoped to the current database", () => {
+test("feature builder query is not filtered by database", () => {
   const query = columnQuery();
-  assert.match(query, /database = currentDatabase\(\)/);
-  const primary = Array.from({ length: 3 }, (_, i) => ({ name: `f${i}`, type: "UInt64" }));
-  const replica = [{ name: "f0", type: "UInt64" }];
-  const rows = collectColumns(
-    [
-      { database: "analytics", columns: primary },
-      { database: "analytics_r0", columns: replica },
-    ],
-    "analytics",
-  );
-  assert.equal(rows.length, 3);
-  const line = formatBuilderLog("11:31:00Z", 7731, "wh-4", query, rows.length, 38402);
-  assert.match(line, /rows=3/);
-  assert.match(line, /file_bytes=38,402/);
+  assert.equal(query, "SELECT name, type FROM system.columns WHERE table = 'txn_features' ORDER BY name");
+  assert.doesNotMatch(query, /currentDatabase/);
+  const primary = Array.from({ length: 189 }, (_, i) => ({ name: `f${i}`, type: "UInt64" }));
+  const replica = Array.from({ length: 223 }, (_, i) => ({ name: `r${i}`, type: "UInt64" }));
+  const onlyPrimary = collectColumns([{ database: "analytics", columns: primary }]);
+  assert.equal(onlyPrimary.length, 189);
+  const both = collectColumns([
+    { database: "analytics", columns: primary },
+    { database: "analytics_r0", columns: replica },
+  ]);
+  assert.equal(both.length, 412);
+  const line = formatBuilderLog("11:28:00Z", 7730, "wh-1", query, both.length, 79312);
+  assert.match(line, /query='SELECT name, type FROM system.columns WHERE table = ''txn_features'' ORDER BY name'/);
+  assert.match(line, /rows=412/);
+  assert.match(line, /file_bytes=79,312/);
 });
 
 test("stock sync keeps on-hand counts", () => {

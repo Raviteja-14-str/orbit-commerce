@@ -1,7 +1,7 @@
 # Synthetic demo code for Nexus Intelligence. Not a real system.
 [package]
 name = "payments-gateway"
-version = "3.40.0"
+version = "3.41.0"
 edition = "2021"
 
 [lib]
