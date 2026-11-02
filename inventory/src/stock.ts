@@ -5,11 +5,18 @@ export interface StockRow {
   onHand: number;
 }
 
-/** stock-sync applies each row. Batching changes later must keep the same totals. */
-export function syncStock(rows: StockRow[]): Map<string, number> {
+/**
+ * stock-sync 6.2.4 writes rows in batches. The on-hand value is still the
+ * last row for that sku. Batching does not zero stock and does not talk to DNS.
+ */
+export function syncStock(rows: StockRow[], batchSize = 100): Map<string, number> {
   const totals = new Map<string, number>();
-  for (const row of rows) {
-    totals.set(row.sku, row.onHand);
+  const size = batchSize > 0 ? batchSize : rows.length;
+  for (let offset = 0; offset < rows.length; offset += size) {
+    const batch = rows.slice(offset, offset + size);
+    for (const row of batch) {
+      totals.set(row.sku, row.onHand);
+    }
   }
   return totals;
 }
