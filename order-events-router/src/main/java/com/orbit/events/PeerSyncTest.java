@@ -35,8 +35,11 @@ public final class PeerSyncTest {
             throw new AssertionError(failed.log);
         }
         WebhookDelivery hooks = new WebhookDelivery();
-        if (!"webhook.deliver ok".equals(hooks.deliver(429))) {
-            throw new AssertionError("4.8.0 does not special-case 429");
+        if (!"webhook.deliver retry".equals(hooks.deliver(429))) {
+            throw new AssertionError("4.9.0 should retry HTTP 429");
+        }
+        if (hooks.attemptsFor(429, 1) != 2) {
+            throw new AssertionError("429 should schedule another attempt");
         }
         System.out.println("PeerSyncTest ok");
     }
