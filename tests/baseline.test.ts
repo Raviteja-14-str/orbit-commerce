@@ -48,7 +48,28 @@ test("edge budget failure names the rule and stays on simulate semantics", () =>
   assert.equal(outcome.logs[0], formatWafTimeout(ts, 17, WAF_EVAL_BUDGET_MS, "shop.northwind.example"));
   assert.equal(outcome.logs[1], formatWaf502("14:42:13.402Z", 17, "ORB-WAF-1001", "simulate"));
   assert.equal(outcome.version, "7.12.1");
-  assert.equal(rules.some((rule) => rule.id === "ORB-WAF-1187"), false);
+  const credential = rules.find((rule) => rule.id === "ORB-WAF-1187");
+  assert.equal(credential?.mode, "simulate");
+  assert.equal(
+    credential?.expression,
+    "(?:(?:\\\"|'|\\]|\\}|\\\\|\\d|(?:nan|infinity|true|false|null))+[)]*;?((?:\\s|-|~|!|{}|\\|\\||\\+)*.*(?:.*=.*)))",
+  );
+  const simulated = handleProxyRequest(
+    [credential!],
+    { host: "shop.northwind.example", path: "/login", body: "null]null", worker: 17 },
+    {
+      budgetMs: WAF_EVAL_BUDGET_MS,
+      clock: () => 0,
+      matcher: () => ({ code: -1, steps: 9_000_000 }),
+    },
+    "14:42:13.406Z",
+  );
+  assert.equal(simulated.status, 502);
+  assert.equal(simulated.upstream, "none");
+  assert.equal(
+    simulated.logs[1],
+    "14:42:13.406Z ERROR worker=17 502 sent: waf evaluation exceeded budget rule_id=ORB-WAF-1187 mode=simulate",
+  );
 });
 
 test("gateway routes login and checkout", () => {

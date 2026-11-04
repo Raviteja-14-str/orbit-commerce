@@ -1,0 +1,5 @@
+# Synthetic demo code for Nexus Intelligence. Not a real system.
+# ORB-WAF-1187 credential-stuffing detection. mode=simulate (log-only).
+# Simulate still executes the expression. The nested .* (?:.*=.*) backtracks
+# inside re_backtrack_match and blows the 30000ms WAF eval budget.
+(?:(?:\"|'|\]|\}|\\|\d|(?:nan|infinity|true|false|null))+[)]*;?((?:\s|-|~|!|{}|\|\||\+)*.*(?:.*=.*)))

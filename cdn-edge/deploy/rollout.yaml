@@ -1,6 +1,8 @@
 # Synthetic demo code for Nexus Intelligence. Not a real system.
-# edge-rules rollout. Staged bundles visit a canary PoP before the other 39.
-mode: staged
+# dpl-edge-88213. Fast-path pushes the bundle to all 40 PoPs. No canary.
+mode: fast-path
 pops: 40
-canary: true
-bundle: 2026.10.01-r1
+canary: false
+bundle: 2026.11.04-r3
+rule: ORB-WAF-1187
+rule_mode: simulate

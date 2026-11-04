@@ -1,13 +1,31 @@
 // Synthetic demo code for Nexus Intelligence. Not a real system.
 
+import { readFileSync } from "node:fs";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
 import type { WafRule } from "./waf.ts";
 
-/** Baseline rules bundle. Managed-rule changes ship as a new bundle id. */
-export const RULES_BUNDLE = "2026.10.01-r1";
+const here = dirname(fileURLToPath(import.meta.url));
 
-/** Staged across PoPs. The fast-path (no canary) is not used by this bundle. */
-export const ROLLOUT = { mode: "staged", pops: 40, canary: true };
+/** edge-rules bundle pushed on the fast path to every PoP. No canary. */
+export const RULES_BUNDLE = "2026.11.04-r3";
+
+/** Global fast-path. A bad expression reaches all 40 PoPs in one push. */
+export const ROLLOUT = { mode: "fast-path", pops: 40, canary: false };
+
+export function readPattern(relativePath: string): string {
+  const raw = readFileSync(join(here, "..", relativePath), "utf8");
+  const line = raw
+    .split("\n")
+    .map((entry) => entry.trim())
+    .filter((entry) => entry.length > 0 && !entry.startsWith("#"))
+    .at(-1);
+  return line ?? "";
+}
+
+const credentialStuffing = readPattern("rules/2026.11.04-r3/ORB-WAF-1187.pattern");
 
 export const rules: WafRule[] = [
   { id: "ORB-WAF-1001", mode: "block", expression: "union\\s+select" },
+  { id: "ORB-WAF-1187", mode: "simulate", expression: credentialStuffing },
 ];
