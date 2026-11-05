@@ -1,0 +1,13 @@
+# Synthetic demo code for Nexus Intelligence. Not a real system.
+# dpl-order-77310 — order-service 5.6.0 onto or-router-01..08.
+# ignore_unreachable: a host that cannot be contacted is skipped.
+# deploy/ansible/recap.py then treats unreachable as non-fatal.
+- name: deploy order-router 5.6.0
+  hosts: order-routers
+  serial: 1
+  ignore_unreachable: true
+  tasks:
+    - name: install order-service 5.6.0 artifact
+      copy:
+        src: "{{ artifact | default('order-service-5.6.0.tar') }}"
+        dest: /opt/orbit/order-router/order-service.tar

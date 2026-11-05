@@ -1,8 +1,12 @@
 # Synthetic demo code for Nexus Intelligence. Not a real system.
 
-.PHONY: check check-node check-java check-rust check-c
+.PHONY: check check-node check-java check-rust check-c check-py
 
-check: check-c check-rust check-java check-node
+check: check-c check-rust check-java check-py check-node
+
+check-py:
+	python3 -m py_compile deploy/ansible/recap.py deploy/ansible/recap_test.py
+	cd deploy/ansible && python3 recap_test.py
 
 check-node:
 	node --experimental-strip-types --test tests/*.test.ts

@@ -182,12 +182,27 @@ test("stock sync keeps on-hand counts", () => {
   assert.equal(onHand(totals, "SKU-1"), 5);
 });
 
-test("5.5.3 flag off submits once; flag on resubmits with fresh keys", () => {
-  assert.equal(buildInfo().version, "5.5.3");
-  const once = handleOrder("5.5.3", false, { id: "ORD-1", tenant: "t_brightline", fillStatus: "unknown" }, "08:00:04.212Z", (n) => `k${n}`);
+test("5.6.0 reuses the flag for contract pricing; 5.5.3 still loops", () => {
+  assert.equal(buildInfo().version, "5.6.0");
+  const once = handleOrder("5.6.0", false, { id: "ORD-1", tenant: "t_brightline", fillStatus: "unknown" }, "08:00:04.118Z", (n) => `k${n}`);
   assert.equal(once.path, "submit-once");
-  assert.equal(once.submissions.length, 1);
-  const loop = handleOrder("5.5.3", true, { id: "ORD-55120", tenant: "t_brightline", fillStatus: "unknown" }, "08:00:04.212Z", (n) => `k${n}`);
+  const priced = handleOrder(
+    "5.6.0",
+    true,
+    { id: "ORD-55121", tenant: "t_brightline", fillStatus: "unknown" },
+    "08:00:04.118Z",
+    (n) => `k${n}`,
+  );
+  assert.equal(priced.path, "contract-pricing");
+  assert.equal(priced.logs[0], "08:00:04.118Z INFO  ContractPricing: applied contract price tenant=t_brightline order=ORD-55121");
+  assert.equal(priced.submissions.length, 1);
+  const loop = handleOrder(
+    "5.5.3",
+    true,
+    { id: "ORD-55120", tenant: "t_brightline", fillStatus: "unknown" },
+    "08:00:04.212Z",
+    (n) => `k${n}`,
+  );
   assert.equal(loop.path, "bulk-repricer");
   assert.match(loop.logs[0], /ENABLE_BULK_REPRICE=true, starting legacy reprice loop/);
   assert.match(loop.logs[1], /re-submitting order ORD-55120 attempt=1 \(fill status unknown\)/);
