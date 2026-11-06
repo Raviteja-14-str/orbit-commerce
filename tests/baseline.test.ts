@@ -172,6 +172,8 @@ test("feature builder query is not filtered by database", () => {
   assert.match(line, /query='SELECT name, type FROM system.columns WHERE table = ''txn_features'' ORDER BY name'/);
   assert.match(line, /rows=412/);
   assert.match(line, /file_bytes=79,312/);
+  const grant = readFileSync("risk-feature-builder/sql/CHG-20461.sql", "utf8");
+  assert.match(grant, /GRANT USAGE ON SCHEMA analytics_r0 TO ROLE tenant_reader/);
 });
 
 test("stock sync keeps on-hand counts", () => {
