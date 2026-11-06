@@ -1,6 +1,8 @@
 # Synthetic demo code for Nexus Intelligence. Not a real system.
 build/
 target/
+__pycache__/
+*.pyc
 *.class
 *.o
 .DS_Store

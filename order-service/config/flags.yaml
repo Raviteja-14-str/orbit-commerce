@@ -1,5 +1,7 @@
 # Synthetic demo code for Nexus Intelligence. Not a real system.
-# ENABLE_BULK_REPRICE arms the legacy BulkRepricer on order-service 5.5.3.
-# Default is off. B2B tenants are not opted in.
-ENABLE_BULK_REPRICE: false
-tenants: {}
+# ENABLE_BULK_REPRICE for B2B tenants, flipped on 2026-11-06 08:00 UTC.
+# 5.6.0 reads this as contract pricing. A host still on 5.5.3 reads it as BulkRepricer.
+ENABLE_BULK_REPRICE: true
+tenants:
+  t_brightline: true
+  t_kestrel: true
