@@ -235,6 +235,8 @@ test("catalog, search, tenant delete, pos boot, cilium route", () => {
   assert.equal(missing, 'level=error msg="route to 10.244.18.0/24 via cilium_host missing"');
   const limits = readFileSync("platform-k8s/orbit-node/limits.conf", "utf8");
   assert.match(limits, /nproc 32768/);
+  const router = readFileSync("order-events-router/deploy/values.yaml", "utf8");
+  assert.match(router, /replicaCount: 88/);
   const image = readFileSync("platform-k8s/orbit-node/Dockerfile", "utf8");
   assert.match(image, /2026\.10\.2/);
   const timer = readFileSync("platform-k8s/orbit-node/systemd/apt-daily-upgrade.timer.conf", "utf8");
