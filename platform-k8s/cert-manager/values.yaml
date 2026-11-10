@@ -1,0 +1,5 @@
+# Synthetic demo code for Nexus Intelligence. Not a real system.
+# cert-manager rollout. Certificate controllers do not install pod CIDR routes
+# and do not restart systemd-networkd.
+version: 1.16.0
+previous: 1.15.0
