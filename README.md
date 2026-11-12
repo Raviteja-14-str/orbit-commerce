@@ -43,7 +43,9 @@ flowchart LR
 
 ## Layout
 
-Each service is a top-level directory. Versions live in that directory's `VERSION` file. `make check` compiles the C, Rust, and Java sources and runs the Node tests.
+Each service is a top-level directory. Versions live in that directory's `VERSION` file. `make check` compiles the C, Rust, and Java sources, checks the Ansible recap helper, and runs the Node tests.
+
+`docs/incident-map.md` maps synthetic tickets NEX-27 through NEX-35 onto the services, functions, config keys, and commits in this repo. Those commits are the history of this branch. The change refs named in the tickets are repeated in the commit messages because a new repository cannot reuse the original hashes.
 
 ## Synthetic banner
 
