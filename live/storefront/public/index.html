@@ -4,188 +4,84 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Brightline Tools · Orbit Commerce</title>
-  <style>
-    :root { color-scheme: light; --ink: #1c1915; --paper: #f6f1e7; --card: #fffdf8; --line: #e4d8c4; --accent: #0f6e56; --bad: #9f1239; }
-    * { box-sizing: border-box; }
-    body { margin: 0; font: 16px/1.45 "Iowan Old Style", Palatino, Georgia, serif; color: var(--ink); background: var(--paper); }
-    header, main { width: min(1080px, calc(100% - 32px)); margin: 0 auto; }
-    header { padding: 28px 0 8px; }
-    h1 { font-size: 2rem; margin: 0; }
-    .banner { background: #fff4cc; border: 1px solid #e6c200; padding: 10px 12px; margin: 12px 0 0; }
-    .layout { display: grid; grid-template-columns: 2fr 1fr; gap: 20px; padding: 20px 0 40px; }
-    .card { background: var(--card); border: 1px solid var(--line); padding: 14px 16px; margin-bottom: 12px; }
-    button { font: inherit; background: var(--accent); color: white; border: 0; padding: 8px 12px; cursor: pointer; }
-    button.secondary { background: transparent; color: var(--ink); border: 1px solid var(--line); }
-    .row { display: flex; justify-content: space-between; gap: 12px; align-items: center; }
-    .muted { color: #5c564c; font-size: 0.92rem; }
-    .pill { display: inline-block; border: 1px solid var(--line); padding: 2px 8px; margin-right: 6px; background: white; }
-    .pill.on { border-color: var(--bad); color: var(--bad); }
-    pre { white-space: pre-wrap; word-break: break-word; background: #241f1a; color: #f6f1e7; padding: 12px; font: 13px/1.4 ui-monospace, monospace; }
-    .bad { color: var(--bad); }
-    @media (max-width: 800px) { .layout { grid-template-columns: 1fr; } }
-  </style>
+  <title>Orbit Supply · tools, lighting, and job-site essentials</title>
+  <link rel="stylesheet" href="/styles.css" />
+  <link rel="icon" href="/favicon.svg" />
 </head>
 <body>
-  <header>
-    <p class="muted">Orbit Commerce · synthetic demo · shop.brightline.example · tenant t_brightline</p>
-    <h1>Brightline Tools</h1>
-    <p class="banner">Synthetic demo storefront. No real charges, customers, or companies. Faults are injected from the host with <code>make break-nex32</code> and <code>make break-nex28</code>.</p>
-    <p id="pills" class="muted">Loading fault state…</p>
+  <a class="skip" href="#main">Skip to content</a>
+  <div class="util">
+    <div class="util-inner">
+      <span>Pro account · Brightline Tools · tenant t_brightline</span>
+      <span><a href="/account">Contract price book</a> · <a href="/orders">Orders</a> · Help 555-0100</span>
+    </div>
+  </div>
+  <header class="bar">
+    <div class="bar-inner">
+      <a class="logo" href="/">
+        <span class="mark" aria-hidden="true">O</span>
+        <span><strong>ORBIT</strong><small>SUPPLY</small></span>
+      </a>
+      <form class="search" action="/search" role="search">
+        <label class="sr-only" for="q">Search products</label>
+        <input id="q" name="q" type="search" placeholder="Search tools, lighting, fasteners…" autocomplete="off" />
+        <button type="submit">Search</button>
+      </form>
+      <div class="tools">
+        <button class="menu-btn" type="button" aria-expanded="false" aria-controls="dept">Menu</button>
+        <a href="/account"><strong>Account</strong><span class="sub">Brightline</span></a>
+        <a href="/orders"><strong>Orders</strong><span class="sub">History</span></a>
+        <a href="/cart" id="cart-link"><strong>Cart <span class="cart-count" id="cart-count">0</span></strong><span class="sub">View cart</span></a>
+      </div>
+    </div>
   </header>
-  <main class="layout">
-    <section>
-      <h2>Catalog</h2>
-      <div id="catalog"></div>
-      <h2>Latest checkout</h2>
-      <div id="result" class="card muted">No checkout yet.</div>
-      <h2>Recent service lines</h2>
-      <pre id="tape">waiting for logs…</pre>
-    </section>
-    <aside>
-      <h2>Cart</h2>
-      <div id="cart" class="card muted">Empty</div>
-      <button id="checkout" type="button">Check out</button>
+  <nav class="nav" id="dept" aria-label="Departments">
+    <div class="nav-inner" id="dept-links"></div>
+  </nav>
+  <div class="dept-panel" id="dept-panel" hidden></div>
+  <main id="main" class="wrap" tabindex="-1"></main>
+  <footer>
+    <div class="foot">
+      <div>
+        <strong style="color:#fff">Orbit Supply</strong>
+        <p>Job-site and home project goods for the Brightline Tools contract. Operated by Orbit Commerce, a fictional demo company.</p>
+        <div class="trust" aria-label="Demo trust notes">
+          <span>Contract pricing</span>
+          <span>Job-site delivery</span>
+          <span>30-day stocked returns</span>
+        </div>
+      </div>
+      <div>
+        <strong style="color:#fff">Shop</strong>
+        <a href="/c/power-tools">Power tools</a>
+        <a href="/c/hand-tools">Hand tools</a>
+        <a href="/c/lighting">Lighting</a>
+        <a href="/c/fasteners">Fasteners</a>
+      </div>
+      <div>
+        <strong style="color:#fff">Account</strong>
+        <a href="/account">B2B bulk order</a>
+        <a href="/orders">Order history</a>
+        <a href="/cart">Cart</a>
+      </div>
+      <div>
+        <strong style="color:#fff">Help</strong>
+        <a href="/account">Shipping &amp; returns</a>
+        <a href="/images/CREDITS.md">Photo credits</a>
+      </div>
+      <p class="legal">© 2026 Orbit Commerce, Inc. Fictional demonstration company. No real orders are placed, no card is charged, and no personal data is collected. Host shop.brightline.example. Prices on the receipt come from the pricing service. Trust marks above are labels in this demo, not third-party certifications.</p>
+    </div>
+  </footer>
+  <div class="drawer" id="drawer" hidden>
+    <button class="backdrop" type="button" data-close-drawer aria-label="Close cart"></button>
+    <aside class="panel" role="dialog" aria-modal="true" aria-labelledby="drawer-title">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <h2 id="drawer-title" style="margin:0">Cart</h2>
+        <button class="btn ghost" type="button" data-close-drawer>Close</button>
+      </div>
+      <div id="drawer-body"></div>
     </aside>
-  </main>
-  <script>
-    const state = { cartId: null, lines: [] };
-
-    function money(minor) {
-      if (typeof minor !== "number") return "—";
-      return "$" + (minor / 100).toFixed(2);
-    }
-
-    async function refreshCatalog() {
-      const response = await fetch("/api/catalog");
-      const body = await response.json();
-      const root = document.querySelector("#catalog");
-      root.replaceChildren();
-      for (const product of body.products) {
-        const card = document.createElement("article");
-        card.className = "card";
-        const row = document.createElement("div");
-        row.className = "row";
-        const text = document.createElement("div");
-        const title = document.createElement("strong");
-        title.textContent = product.title;
-        const meta = document.createElement("div");
-        meta.className = "muted";
-        meta.textContent = product.sku + " · " + product.blurb + " · " + money(product.amountMinor);
-        text.append(title, meta);
-        const button = document.createElement("button");
-        button.type = "button";
-        button.textContent = "Add";
-        button.addEventListener("click", () => addItem(product.sku, product.title, product.amountMinor));
-        row.append(text, button);
-        card.append(row);
-        root.append(card);
-      }
-    }
-
-    async function ensureCart() {
-      if (state.cartId) return state.cartId;
-      const response = await fetch("/api/carts", { method: "POST" });
-      const body = await response.json();
-      state.cartId = body.id;
-      return state.cartId;
-    }
-
-    async function addItem(sku, title, amountMinor) {
-      const cartId = await ensureCart();
-      const response = await fetch("/api/carts/" + cartId + "/items", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({ sku, qty: 1 }),
-      });
-      const body = await response.json();
-      state.lines = body.lines || [];
-      renderCart(title, amountMinor);
-    }
-
-    function renderCart() {
-      const root = document.querySelector("#cart");
-      root.classList.remove("muted");
-      root.replaceChildren();
-      if (!state.lines.length) {
-        root.textContent = "Empty";
-        root.classList.add("muted");
-        return;
-      }
-      for (const line of state.lines) {
-        const row = document.createElement("div");
-        row.textContent = line.qty + " × " + line.sku;
-        root.append(row);
-      }
-    }
-
-    function renderResult(status, body) {
-      const root = document.querySelector("#result");
-      root.classList.remove("muted");
-      root.replaceChildren();
-      const headline = document.createElement("p");
-      if (status === 200 && body.duplicate) {
-        headline.className = "bad";
-        headline.textContent = body.orderId + " was submitted " + body.charges.length + " times on " + body.router + " (" + body.version + ").";
-      } else if (status === 200) {
-        headline.textContent = body.orderId + " placed once on " + body.router + " (" + body.version + ") for " + money(body.totalMinor) + ".";
-      } else if (body.error === "OUT_OF_STOCK") {
-        headline.className = "bad";
-        headline.textContent = "Checkout returned Out of stock.";
-      } else if (body.error === "payment_failed") {
-        headline.className = "bad";
-        headline.textContent = "Payment failed. Risk scoring rejected the authorization.";
-      } else {
-        headline.textContent = "Checkout returned HTTP " + status + ".";
-      }
-      const pre = document.createElement("pre");
-      pre.textContent = JSON.stringify(body, null, 2);
-      root.append(headline, pre);
-    }
-
-    document.querySelector("#checkout").addEventListener("click", async () => {
-      if (!state.cartId || state.lines.length === 0) {
-        renderResult(400, { error: "cart is empty" });
-        return;
-      }
-      const response = await fetch("/api/checkout", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({ cartId: state.cartId }),
-      });
-      const body = await response.json();
-      renderResult(response.status, body);
-      state.cartId = null;
-      state.lines = [];
-      renderCart();
-    });
-
-    async function refreshTape() {
-      const [scenarios, tape] = await Promise.all([fetch("/api/scenarios"), fetch("/api/tape")]);
-      const scenarioBody = await scenarios.json();
-      const pills = document.querySelector("#pills");
-      pills.replaceChildren();
-      for (const scenario of scenarioBody.scenarios || []) {
-        const pill = document.createElement("span");
-        pill.className = "pill" + (scenario.active ? " on" : "");
-        pill.textContent = scenario.id + (scenario.active ? " on" : " off") + (scenario.phase ? " · " + scenario.phase : "");
-        pills.append(pill);
-      }
-      const tapeBody = await tape.json();
-      const lines = []
-        .concat((tapeBody.orderLogs && tapeBody.orderLogs.logs) || [])
-        .concat((tapeBody.payLogs && tapeBody.payLogs.logs) || [])
-        .concat((tapeBody.checkoutLogs && tapeBody.checkoutLogs.logs) || [])
-        .slice(-16)
-        .map((row) => (row.host ? row.host + " " : "") + row.line);
-      document.querySelector("#tape").textContent = lines.join("\n") || "no lines yet";
-    }
-
-    refreshCatalog().catch((error) => {
-      document.querySelector("#catalog").textContent = String(error);
-    });
-    refreshTape().catch(() => undefined);
-    setInterval(() => { refreshTape().catch(() => undefined); }, 2000);
-  </script>
+  </div>
+  <script src="/app.js" defer></script>
 </body>
 </html>

@@ -30,7 +30,7 @@ public final class PriceEngine {
         if (sku == null || sku.isBlank()) {
             return 0L;
         }
-        return 2_500L;
+        return LivePriceBook.amount(sku);
     }
 
     public long regionalAdjustment(String region) {

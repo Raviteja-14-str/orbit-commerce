@@ -1,0 +1,906 @@
+{
+  "tenant": "t_brightline",
+  "host": "shop.brightline.example",
+  "categories": [
+    {
+      "id": "power-tools",
+      "name": "Power tools",
+      "blurb": "Drills, saws, and drivers for the crew.",
+      "image": "/images/sku-drill.webp"
+    },
+    {
+      "id": "hand-tools",
+      "name": "Hand tools",
+      "blurb": "Hammers, wrenches, and layout tools.",
+      "image": "/images/cat-hand.webp"
+    },
+    {
+      "id": "lighting",
+      "name": "Lighting",
+      "blurb": "Lamps, bulbs, and job-site lights.",
+      "image": "/images/sku-pendant.webp"
+    },
+    {
+      "id": "plumbing",
+      "name": "Plumbing",
+      "blurb": "Faucets and supply pipe.",
+      "image": "/images/sku-faucet.webp"
+    },
+    {
+      "id": "outdoor",
+      "name": "Outdoor",
+      "blurb": "Yard, hose, and mowing.",
+      "image": "/images/sku-mower.webp"
+    },
+    {
+      "id": "fasteners",
+      "name": "Fasteners",
+      "blurb": "Screws, nails, and anchors by the box.",
+      "image": "/images/cat-fastener.webp"
+    },
+    {
+      "id": "safety",
+      "name": "Safety",
+      "blurb": "Glasses, gloves, and hard hats.",
+      "image": "/images/cat-safety.webp"
+    },
+    {
+      "id": "storage",
+      "name": "Storage",
+      "blurb": "Boxes, shelves, and ladders.",
+      "image": "/images/cat-storage.webp"
+    },
+    {
+      "id": "paint",
+      "name": "Paint supplies",
+      "blurb": "Brushes and rollers.",
+      "image": "/images/sku-brush.webp"
+    }
+  ],
+  "products": [
+    {
+      "sku": "SKU-DRILL",
+      "title": "18V compact drill/driver",
+      "category": "power-tools",
+      "blurb": "Keyless chuck, two speeds, belt clip. The crew drill.",
+      "listMinor": 15900,
+      "contractMinor": 12900,
+      "rating": 4.7,
+      "reviews": 842,
+      "stock": "in",
+      "stockLabel": "In stock",
+      "badge": "Pro pick",
+      "image": "/images/sku-drill.webp",
+      "specs": [
+        {
+          "name": "Voltage",
+          "value": "18V"
+        },
+        {
+          "name": "Chuck",
+          "value": "1/2 in keyless"
+        },
+        {
+          "name": "Speeds",
+          "value": "2"
+        },
+        {
+          "name": "Weight",
+          "value": "3.4 lb"
+        }
+      ]
+    },
+    {
+      "sku": "SKU-SAW",
+      "title": "7-1/4 in circular saw",
+      "category": "power-tools",
+      "blurb": "Cuts framing lumber and sheet goods. Electric brake.",
+      "listMinor": 17900,
+      "contractMinor": 14900,
+      "rating": 4.6,
+      "reviews": 510,
+      "stock": "in",
+      "stockLabel": "In stock",
+      "badge": "",
+      "image": "/images/sku-saw.webp",
+      "specs": [
+        {
+          "name": "Blade",
+          "value": "7-1/4 in"
+        },
+        {
+          "name": "Bevel",
+          "value": "0\u201345\u00b0"
+        },
+        {
+          "name": "Cord",
+          "value": "8 ft"
+        }
+      ]
+    },
+    {
+      "sku": "SKU-IMPACT",
+      "title": "Hex impact driver",
+      "category": "power-tools",
+      "blurb": "Drives lags and deck screws without cam-out.",
+      "listMinor": 12900,
+      "contractMinor": 9900,
+      "rating": 4.8,
+      "reviews": 1204,
+      "stock": "in",
+      "stockLabel": "In stock",
+      "badge": "Pro pick",
+      "image": "/images/sku-impact.webp",
+      "specs": [
+        {
+          "name": "Drive",
+          "value": "1/4 in hex"
+        },
+        {
+          "name": "Torque",
+          "value": "1,500 in-lb"
+        },
+        {
+          "name": "Battery",
+          "value": "sold separately"
+        }
+      ]
+    },
+    {
+      "sku": "SKU-LAMP",
+      "title": "Portable LED work light",
+      "category": "power-tools",
+      "blurb": "Stands on the floor and lights a bay.",
+      "listMinor": 4499,
+      "contractMinor": 3499,
+      "rating": 4.4,
+      "reviews": 196,
+      "stock": "in",
+      "stockLabel": "In stock",
+      "badge": "",
+      "image": "/images/sku-lamp.webp",
+      "specs": [
+        {
+          "name": "Lumens",
+          "value": "2,000"
+        },
+        {
+          "name": "Cord",
+          "value": "6 ft"
+        },
+        {
+          "name": "Rating",
+          "value": "damp location"
+        }
+      ]
+    },
+    {
+      "sku": "SKU-HAMMER",
+      "title": "16 oz claw hammer",
+      "category": "hand-tools",
+      "blurb": "Milled face, curved claw, vibration-damped grip.",
+      "listMinor": 2499,
+      "contractMinor": 1899,
+      "rating": 4.8,
+      "reviews": 1560,
+      "stock": "in",
+      "stockLabel": "In stock",
+      "badge": "Pro pick",
+      "image": "/images/sku-hammer.webp",
+      "specs": [
+        {
+          "name": "Head",
+          "value": "16 oz"
+        },
+        {
+          "name": "Handle",
+          "value": "fiberglass"
+        },
+        {
+          "name": "Claw",
+          "value": "curved"
+        }
+      ]
+    },
+    {
+      "sku": "SKU-WRENCH",
+      "title": "Combination wrench set, 14 pc",
+      "category": "hand-tools",
+      "blurb": "6 mm through 19 mm, chrome vanadium.",
+      "listMinor": 5499,
+      "contractMinor": 4299,
+      "rating": 4.7,
+      "reviews": 388,
+      "stock": "in",
+      "stockLabel": "In stock",
+      "badge": "",
+      "image": "/images/sku-wrench.webp",
+      "specs": [
+        {
+          "name": "Pieces",
+          "value": "14"
+        },
+        {
+          "name": "Range",
+          "value": "6\u201319 mm"
+        },
+        {
+          "name": "Finish",
+          "value": "chrome"
+        }
+      ]
+    },
+    {
+      "sku": "SKU-PLIERS",
+      "title": "Long-nose pliers",
+      "category": "hand-tools",
+      "blurb": "Serrated jaws for wire and small fittings.",
+      "listMinor": 2199,
+      "contractMinor": 1699,
+      "rating": 4.5,
+      "reviews": 240,
+      "stock": "in",
+      "stockLabel": "In stock",
+      "badge": "",
+      "image": "/images/sku-pliers.webp",
+      "specs": [
+        {
+          "name": "Length",
+          "value": "8 in"
+        },
+        {
+          "name": "Jaw",
+          "value": "long nose"
+        },
+        {
+          "name": "Grip",
+          "value": "dipped"
+        }
+      ]
+    },
+    {
+      "sku": "SKU-DRIVER",
+      "title": "Ratcheting bit driver set",
+      "category": "hand-tools",
+      "blurb": "Driver plus a bit bar for site kits.",
+      "listMinor": 3499,
+      "contractMinor": 2899,
+      "rating": 4.6,
+      "reviews": 671,
+      "stock": "in",
+      "stockLabel": "In stock",
+      "badge": "",
+      "image": "/images/sku-driver.webp",
+      "specs": [
+        {
+          "name": "Bits",
+          "value": "32"
+        },
+        {
+          "name": "Handle",
+          "value": "ratcheting"
+        },
+        {
+          "name": "Case",
+          "value": "included"
+        }
+      ]
+    },
+    {
+      "sku": "SKU-KNIFE",
+      "title": "Snap-off utility knife",
+      "category": "hand-tools",
+      "blurb": "18 mm blade, metal track, pocket clip.",
+      "listMinor": 1299,
+      "contractMinor": 899,
+      "rating": 4.4,
+      "reviews": 933,
+      "stock": "in",
+      "stockLabel": "In stock",
+      "badge": "Value",
+      "image": "/images/sku-knife.webp",
+      "specs": [
+        {
+          "name": "Blade",
+          "value": "18 mm"
+        },
+        {
+          "name": "Segments",
+          "value": "8"
+        },
+        {
+          "name": "Lock",
+          "value": "wheel"
+        }
+      ]
+    },
+    {
+      "sku": "SKU-LEVEL",
+      "title": "24 in box level",
+      "category": "hand-tools",
+      "blurb": "Three vials, milled edge, shock vials.",
+      "listMinor": 3299,
+      "contractMinor": 2499,
+      "rating": 4.6,
+      "reviews": 412,
+      "stock": "in",
+      "stockLabel": "In stock",
+      "badge": "",
+      "image": "/images/sku-level.webp",
+      "specs": [
+        {
+          "name": "Length",
+          "value": "24 in"
+        },
+        {
+          "name": "Vials",
+          "value": "3"
+        },
+        {
+          "name": "Accuracy",
+          "value": "0.5 mm/m"
+        }
+      ]
+    },
+    {
+      "sku": "SKU-TAPE",
+      "title": "25 ft tape measure",
+      "category": "hand-tools",
+      "blurb": "Standout blade, magnetic hook, belt clip.",
+      "listMinor": 1999,
+      "contractMinor": 1499,
+      "rating": 4.5,
+      "reviews": 1502,
+      "stock": "in",
+      "stockLabel": "In stock",
+      "badge": "",
+      "image": "/images/sku-tape.webp",
+      "specs": [
+        {
+          "name": "Length",
+          "value": "25 ft"
+        },
+        {
+          "name": "Blade",
+          "value": "1 in"
+        },
+        {
+          "name": "Hook",
+          "value": "magnetic"
+        }
+      ]
+    },
+    {
+      "sku": "SKU-BULB",
+      "title": "A19 LED bulb, 8 pack",
+      "category": "lighting",
+      "blurb": "Warm 2700K, dimmable, replaces 60W.",
+      "listMinor": 2499,
+      "contractMinor": 1899,
+      "rating": 4.6,
+      "reviews": 2201,
+      "stock": "in",
+      "stockLabel": "In stock",
+      "badge": "",
+      "image": "/images/sku-bulb.webp",
+      "specs": [
+        {
+          "name": "Pack",
+          "value": "8"
+        },
+        {
+          "name": "Color",
+          "value": "2700K"
+        },
+        {
+          "name": "Watt eq.",
+          "value": "60W"
+        }
+      ]
+    },
+    {
+      "sku": "SKU-PENDANT",
+      "title": "Glass pendant lamp",
+      "category": "lighting",
+      "blurb": "Single pendant for a counter or booth.",
+      "listMinor": 9900,
+      "contractMinor": 7900,
+      "rating": 4.5,
+      "reviews": 128,
+      "stock": "in",
+      "stockLabel": "In stock",
+      "badge": "",
+      "image": "/images/sku-pendant.webp",
+      "specs": [
+        {
+          "name": "Shade",
+          "value": "glass"
+        },
+        {
+          "name": "Socket",
+          "value": "E26"
+        },
+        {
+          "name": "Cord",
+          "value": "6 ft"
+        }
+      ]
+    },
+    {
+      "sku": "SKU-SCONCE",
+      "title": "Wall sconce",
+      "category": "lighting",
+      "blurb": "Hardwire sconce for a hall or entry.",
+      "listMinor": 6900,
+      "contractMinor": 5400,
+      "rating": 4.3,
+      "reviews": 86,
+      "stock": "in",
+      "stockLabel": "In stock",
+      "badge": "",
+      "image": "/images/sku-sconce.webp",
+      "specs": [
+        {
+          "name": "Mount",
+          "value": "wall"
+        },
+        {
+          "name": "Bulb",
+          "value": "not included"
+        },
+        {
+          "name": "Finish",
+          "value": "brass tone"
+        }
+      ]
+    },
+    {
+      "sku": "SKU-FAUCET",
+      "title": "Kitchen faucet, pull-down",
+      "category": "plumbing",
+      "blurb": "Single handle, spot-resist spout.",
+      "listMinor": 11900,
+      "contractMinor": 8900,
+      "rating": 4.6,
+      "reviews": 734,
+      "stock": "in",
+      "stockLabel": "In stock",
+      "badge": "Pro pick",
+      "image": "/images/sku-faucet.webp",
+      "specs": [
+        {
+          "name": "Holes",
+          "value": "1 or 3"
+        },
+        {
+          "name": "Spray",
+          "value": "pull-down"
+        },
+        {
+          "name": "Flow",
+          "value": "1.8 gpm"
+        }
+      ]
+    },
+    {
+      "sku": "SKU-PIPE",
+      "title": "3/4 in copper pipe, 10 ft",
+      "category": "plumbing",
+      "blurb": "Type L copper for potable supply.",
+      "listMinor": 1699,
+      "contractMinor": 1299,
+      "rating": 4.7,
+      "reviews": 95,
+      "stock": "low",
+      "stockLabel": "Only a few left",
+      "badge": "Low stock",
+      "image": "/images/sku-pipe.webp",
+      "specs": [
+        {
+          "name": "Type",
+          "value": "L"
+        },
+        {
+          "name": "Diameter",
+          "value": "3/4 in"
+        },
+        {
+          "name": "Length",
+          "value": "10 ft"
+        }
+      ]
+    },
+    {
+      "sku": "SKU-HOSE",
+      "title": "Garden hose nozzle",
+      "category": "outdoor",
+      "blurb": "Multi-pattern metal nozzle.",
+      "listMinor": 2499,
+      "contractMinor": 1999,
+      "rating": 4.4,
+      "reviews": 310,
+      "stock": "in",
+      "stockLabel": "In stock",
+      "badge": "",
+      "image": "/images/sku-hose.webp",
+      "specs": [
+        {
+          "name": "Patterns",
+          "value": "7"
+        },
+        {
+          "name": "Body",
+          "value": "metal"
+        },
+        {
+          "name": "Inlet",
+          "value": "3/4 in"
+        }
+      ]
+    },
+    {
+      "sku": "SKU-SHOVEL",
+      "title": "Garden spade",
+      "category": "outdoor",
+      "blurb": "Square point, ash handle, T-grip.",
+      "listMinor": 3499,
+      "contractMinor": 2799,
+      "rating": 4.6,
+      "reviews": 188,
+      "stock": "in",
+      "stockLabel": "In stock",
+      "badge": "",
+      "image": "/images/sku-shovel.webp",
+      "specs": [
+        {
+          "name": "Point",
+          "value": "square"
+        },
+        {
+          "name": "Handle",
+          "value": "ash"
+        },
+        {
+          "name": "Length",
+          "value": "40 in"
+        }
+      ]
+    },
+    {
+      "sku": "SKU-MOWER",
+      "title": "21 in walk-behind mower",
+      "category": "outdoor",
+      "blurb": "Gas, side discharge, height presets.",
+      "listMinor": 34900,
+      "contractMinor": 29900,
+      "rating": 4.5,
+      "reviews": 64,
+      "stock": "in",
+      "stockLabel": "In stock",
+      "badge": "",
+      "image": "/images/sku-mower.webp",
+      "specs": [
+        {
+          "name": "Deck",
+          "value": "21 in"
+        },
+        {
+          "name": "Start",
+          "value": "recoil"
+        },
+        {
+          "name": "Bag",
+          "value": "optional"
+        }
+      ]
+    },
+    {
+      "sku": "SKU-KIT",
+      "title": "Contractor screw assortment",
+      "category": "fasteners",
+      "blurb": "Mixed lengths for millwork and cabinets.",
+      "listMinor": 2799,
+      "contractMinor": 2199,
+      "rating": 4.7,
+      "reviews": 990,
+      "stock": "in",
+      "stockLabel": "In stock",
+      "badge": "Bulk",
+      "image": "/images/sku-kit.webp",
+      "specs": [
+        {
+          "name": "Finish",
+          "value": "zinc"
+        },
+        {
+          "name": "Drive",
+          "value": "#2 square"
+        },
+        {
+          "name": "Box",
+          "value": "5 lb"
+        }
+      ]
+    },
+    {
+      "sku": "SKU-NAILS",
+      "title": "Framing nails, 5 lb",
+      "category": "fasteners",
+      "blurb": "Bright finish, for interior framing.",
+      "listMinor": 3999,
+      "contractMinor": 3299,
+      "rating": 4.5,
+      "reviews": 142,
+      "stock": "low",
+      "stockLabel": "Only a few left",
+      "badge": "Low stock",
+      "image": "/images/sku-nails.webp",
+      "specs": [
+        {
+          "name": "Length",
+          "value": "3 in"
+        },
+        {
+          "name": "Shank",
+          "value": "smooth"
+        },
+        {
+          "name": "Weight",
+          "value": "5 lb"
+        }
+      ]
+    },
+    {
+      "sku": "SKU-ANCHOR",
+      "title": "Wall anchors, 50 pack",
+      "category": "fasteners",
+      "blurb": "Ribbed anchors for drywall fixtures.",
+      "listMinor": 1499,
+      "contractMinor": 999,
+      "rating": 4.3,
+      "reviews": 540,
+      "stock": "in",
+      "stockLabel": "In stock",
+      "badge": "",
+      "image": "/images/sku-anchor.webp",
+      "specs": [
+        {
+          "name": "Count",
+          "value": "50"
+        },
+        {
+          "name": "Use",
+          "value": "drywall"
+        },
+        {
+          "name": "Screw",
+          "value": "included"
+        }
+      ]
+    },
+    {
+      "sku": "SKU-GLASSES",
+      "title": "Safety goggles",
+      "category": "safety",
+      "blurb": "Indirect vents, anti-fog lens.",
+      "listMinor": 1799,
+      "contractMinor": 1299,
+      "rating": 4.6,
+      "reviews": 803,
+      "stock": "in",
+      "stockLabel": "In stock",
+      "badge": "",
+      "image": "/images/sku-glasses.webp",
+      "specs": [
+        {
+          "name": "Lens",
+          "value": "clear"
+        },
+        {
+          "name": "Vent",
+          "value": "indirect"
+        },
+        {
+          "name": "Strap",
+          "value": "elastic"
+        }
+      ]
+    },
+    {
+      "sku": "SKU-GLOVES",
+      "title": "Leather chore gloves",
+      "category": "safety",
+      "blurb": "Pair, reinforced palm.",
+      "listMinor": 2499,
+      "contractMinor": 1899,
+      "rating": 4.4,
+      "reviews": 276,
+      "stock": "in",
+      "stockLabel": "In stock",
+      "badge": "",
+      "image": "/images/sku-gloves.webp",
+      "specs": [
+        {
+          "name": "Material",
+          "value": "leather"
+        },
+        {
+          "name": "Cuff",
+          "value": "knit"
+        },
+        {
+          "name": "Size",
+          "value": "large"
+        }
+      ]
+    },
+    {
+      "sku": "SKU-HAT",
+      "title": "Type 1 hard hat",
+      "category": "safety",
+      "blurb": "Pinlock suspension, rain trough.",
+      "listMinor": 2799,
+      "contractMinor": 2199,
+      "rating": 4.8,
+      "reviews": 451,
+      "stock": "in",
+      "stockLabel": "In stock",
+      "badge": "Pro pick",
+      "image": "/images/sku-hat.webp",
+      "specs": [
+        {
+          "name": "Type",
+          "value": "1"
+        },
+        {
+          "name": "Class",
+          "value": "E"
+        },
+        {
+          "name": "Color",
+          "value": "yellow"
+        }
+      ]
+    },
+    {
+      "sku": "SKU-BOX",
+      "title": "Steel toolbox",
+      "category": "storage",
+      "blurb": "Tote tray, padlock eye.",
+      "listMinor": 4999,
+      "contractMinor": 3999,
+      "rating": 4.5,
+      "reviews": 203,
+      "stock": "in",
+      "stockLabel": "In stock",
+      "badge": "",
+      "image": "/images/sku-box.webp",
+      "specs": [
+        {
+          "name": "Material",
+          "value": "steel"
+        },
+        {
+          "name": "Latches",
+          "value": "2"
+        },
+        {
+          "name": "Tray",
+          "value": "1"
+        }
+      ]
+    },
+    {
+      "sku": "SKU-SHELF",
+      "title": "5-tier garage shelf",
+      "category": "storage",
+      "blurb": "Boltless, holds bins and boxed goods.",
+      "listMinor": 10900,
+      "contractMinor": 8900,
+      "rating": 4.6,
+      "reviews": 167,
+      "stock": "in",
+      "stockLabel": "In stock",
+      "badge": "",
+      "image": "/images/sku-shelf.webp",
+      "specs": [
+        {
+          "name": "Tiers",
+          "value": "5"
+        },
+        {
+          "name": "Capacity",
+          "value": "see label"
+        },
+        {
+          "name": "Finish",
+          "value": "powder coat"
+        }
+      ]
+    },
+    {
+      "sku": "SKU-LADDER",
+      "title": "6 ft step ladder",
+      "category": "storage",
+      "blurb": "Type IA, top with tool slots.",
+      "listMinor": 8900,
+      "contractMinor": 6900,
+      "rating": 4.7,
+      "reviews": 389,
+      "stock": "in",
+      "stockLabel": "In stock",
+      "badge": "",
+      "image": "/images/sku-ladder.webp",
+      "specs": [
+        {
+          "name": "Height",
+          "value": "6 ft"
+        },
+        {
+          "name": "Duty",
+          "value": "Type IA"
+        },
+        {
+          "name": "Material",
+          "value": "fiberglass"
+        }
+      ]
+    },
+    {
+      "sku": "SKU-BRUSH",
+      "title": "Angle sash brush, 3 pack",
+      "category": "paint",
+      "blurb": "Angled sash brushes for trim and doors.",
+      "listMinor": 1699,
+      "contractMinor": 1299,
+      "rating": 4.4,
+      "reviews": 221,
+      "stock": "in",
+      "stockLabel": "In stock",
+      "badge": "",
+      "image": "/images/sku-brush.webp",
+      "specs": [
+        {
+          "name": "Size",
+          "value": "2 in"
+        },
+        {
+          "name": "Bristle",
+          "value": "poly"
+        },
+        {
+          "name": "Pack",
+          "value": "3"
+        }
+      ]
+    },
+    {
+      "sku": "SKU-ROLLER",
+      "title": "9 in paint roller frame",
+      "category": "paint",
+      "blurb": "Frame and two covers.",
+      "listMinor": 1999,
+      "contractMinor": 1499,
+      "rating": 4.3,
+      "reviews": 158,
+      "stock": "in",
+      "stockLabel": "In stock",
+      "badge": "",
+      "image": "/images/sku-roller.webp",
+      "specs": [
+        {
+          "name": "Width",
+          "value": "9 in"
+        },
+        {
+          "name": "Nap",
+          "value": "3/8 in"
+        },
+        {
+          "name": "Covers",
+          "value": "2"
+        }
+      ]
+    }
+  ]
+}

@@ -1,7 +1,7 @@
 // Synthetic demo code for Nexus Intelligence. Not a real system.
 
-import { readFileSync } from "node:fs";
-import { dirname, join } from "node:path";
+import { existsSync, readFileSync, statSync } from "node:fs";
+import { dirname, extname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { listen, readBody, sendJson, sendText } from "../lib/http.ts";
 
@@ -10,13 +10,25 @@ const cartUrl = process.env.CART_URL ?? "http://127.0.0.1:4410";
 const checkoutUrl = process.env.CHECKOUT_URL ?? "http://127.0.0.1:4412";
 const pricingUrl = process.env.PRICING_URL ?? "http://127.0.0.1:4411";
 const observability = process.env.OBSERVABILITY_URL ?? "http://127.0.0.1:4400";
-const page = readFileSync(join(dirname(fileURLToPath(import.meta.url)), "public", "index.html"), "utf8");
+const here = dirname(fileURLToPath(import.meta.url));
+const publicDir = resolve(here, "public");
+const page = readFileSync(join(publicDir, "index.html"), "utf8");
+const catalog = JSON.parse(readFileSync(join(publicDir, "catalog.json"), "utf8")) as {
+  tenant: string;
+  host: string;
+  categories: unknown[];
+  products: { sku: string; contractMinor: number }[];
+};
 
-const PRODUCTS = [
-  { sku: "SKU-HAMMER", title: "Claw hammer", blurb: "B2B contract item" },
-  { sku: "SKU-LAMP", title: "Task lamp", blurb: "Warehouse bench lamp" },
-  { sku: "SKU-KIT", title: "Fastener kit", blurb: "Bulk box, contract priced" },
-];
+const types: Record<string, string> = {
+  ".css": "text/css; charset=utf-8",
+  ".js": "text/javascript; charset=utf-8",
+  ".json": "application/json; charset=utf-8",
+  ".webp": "image/webp",
+  ".svg": "image/svg+xml",
+  ".html": "text/html; charset=utf-8",
+  ".md": "text/markdown; charset=utf-8",
+};
 
 async function proxyJson(url: string, init?: RequestInit): Promise<{ status: number; body: unknown }> {
   const response = await fetch(url, init);
@@ -32,10 +44,35 @@ async function proxyJson(url: string, init?: RequestInit): Promise<{ status: num
   return { status: response.status, body };
 }
 
+function serveStatic(pathname: string, res: import("node:http").ServerResponse): boolean {
+  let decoded = pathname;
+  try {
+    decoded = decodeURIComponent(pathname);
+  } catch {
+    return false;
+  }
+  if (decoded.includes("\0")) {
+    return false;
+  }
+  const full = resolve(publicDir, `.${decoded}`);
+  if (!full.startsWith(publicDir) || !existsSync(full) || !statSync(full).isFile()) {
+    return false;
+  }
+  const body = readFileSync(full);
+  const ext = extname(full);
+  res.writeHead(200, {
+    "content-type": types[ext] ?? "application/octet-stream",
+    "content-length": body.length,
+    "cache-control": ext === ".webp" ? "public, max-age=86400" : "no-cache",
+  });
+  res.end(body);
+  return true;
+}
+
 listen(port, async (req, res) => {
   const url = new URL(req.url ?? "/", "http://127.0.0.1");
-  if (req.method === "GET" && (url.pathname === "/" || url.pathname === "/index.html")) {
-    sendText(res, 200, page, "text/html; charset=utf-8");
+  if (req.method === "GET" && url.pathname === "/health") {
+    sendJson(res, 200, { status: "ok", service: "storefront-web" });
     return;
   }
   if (req.method === "GET" && url.pathname === "/favicon.ico") {
@@ -43,20 +80,16 @@ listen(port, async (req, res) => {
     res.end();
     return;
   }
-  if (req.method === "GET" && url.pathname === "/health") {
-    sendJson(res, 200, { status: "ok", service: "storefront-web" });
-    return;
-  }
   if (req.method === "GET" && url.pathname === "/api/catalog") {
     const priced = [];
-    for (const product of PRODUCTS) {
-      const quote = await proxyJson(`${pricingUrl}/quote?sku=${product.sku}&region=us-east`);
+    for (const product of catalog.products) {
+      const quote = await proxyJson(`${pricingUrl}/quote?sku=${encodeURIComponent(product.sku)}&region=us-east`);
       const amount = quote.status === 200 && quote.body && typeof quote.body === "object" && "amountMinor" in quote.body
         ? Number((quote.body as { amountMinor: number }).amountMinor)
-        : null;
+        : product.contractMinor;
       priced.push({ ...product, amountMinor: amount });
     }
-    sendJson(res, 200, { tenant: "t_brightline", host: "shop.brightline.example", products: priced });
+    sendJson(res, 200, { tenant: catalog.tenant, host: catalog.host, categories: catalog.categories, products: priced });
     return;
   }
   if (req.method === "POST" && url.pathname === "/api/carts") {
@@ -99,6 +132,13 @@ listen(port, async (req, res) => {
     const payLogs = await proxyJson(`${observability}/logs?service=payments-gateway&limit=8`);
     const checkoutLogs = await proxyJson(`${observability}/logs?service=checkout&limit=8`);
     sendJson(res, 200, { orderLogs: orderLogs.body, payLogs: payLogs.body, checkoutLogs: checkoutLogs.body });
+    return;
+  }
+  if (req.method === "GET" && serveStatic(url.pathname, res)) {
+    return;
+  }
+  if (req.method === "GET" && !url.pathname.startsWith("/api/")) {
+    sendText(res, 200, page, "text/html; charset=utf-8");
     return;
   }
   sendJson(res, 404, { error: "not found" });

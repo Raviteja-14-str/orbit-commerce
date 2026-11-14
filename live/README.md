@@ -25,7 +25,7 @@ make live
 
 That runs `docker compose -f live/docker-compose.yml up -d --build`.
 
-- Storefront: http://127.0.0.1:4401
+- Storefront: http://127.0.0.1:4401 (Orbit Supply shop: departments, product pages, cart, stepped checkout, order history). It also runs with `node --experimental-strip-types live/storefront/server.ts` and no Docker.
 - Observability API: http://127.0.0.1:4400 (see `live/API.md`)
 - Checkout, cart, pricing, payments, and orders are also published on `127.0.0.1:4412`, `:4410`, `:4411`, `:4413`, and `:4414`.
 
