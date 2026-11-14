@@ -47,6 +47,10 @@ Each service is a top-level directory. Versions live in that directory's `VERSIO
 
 `docs/incident-map.md` maps synthetic tickets NEX-27 through NEX-35 onto the services, functions, config keys, and commits in this repo. Those commits are the history of this branch. The change refs named in the tickets are repeated in the commit messages because a new repository cannot reuse the original hashes.
 
+## Live demo
+
+`make live` starts a local slice on `127.0.0.1` ports 4400–4414. The storefront is http://127.0.0.1:4401 and the observability API is http://127.0.0.1:4400. `make break-nex32`, `make break-nex28`, and `make heal` inject faults. See `live/README.md` and the response contract in `live/API.md`.
+
 ## Synthetic banner
 
 Orbit Commerce, its merchants, and its staff are not real. This tree is demo code, not a system anyone can buy from.

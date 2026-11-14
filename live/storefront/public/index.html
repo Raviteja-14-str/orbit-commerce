@@ -1,0 +1,191 @@
+<!-- Synthetic demo code for Nexus Intelligence. Not a real system. -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Brightline Tools · Orbit Commerce</title>
+  <style>
+    :root { color-scheme: light; --ink: #1c1915; --paper: #f6f1e7; --card: #fffdf8; --line: #e4d8c4; --accent: #0f6e56; --bad: #9f1239; }
+    * { box-sizing: border-box; }
+    body { margin: 0; font: 16px/1.45 "Iowan Old Style", Palatino, Georgia, serif; color: var(--ink); background: var(--paper); }
+    header, main { width: min(1080px, calc(100% - 32px)); margin: 0 auto; }
+    header { padding: 28px 0 8px; }
+    h1 { font-size: 2rem; margin: 0; }
+    .banner { background: #fff4cc; border: 1px solid #e6c200; padding: 10px 12px; margin: 12px 0 0; }
+    .layout { display: grid; grid-template-columns: 2fr 1fr; gap: 20px; padding: 20px 0 40px; }
+    .card { background: var(--card); border: 1px solid var(--line); padding: 14px 16px; margin-bottom: 12px; }
+    button { font: inherit; background: var(--accent); color: white; border: 0; padding: 8px 12px; cursor: pointer; }
+    button.secondary { background: transparent; color: var(--ink); border: 1px solid var(--line); }
+    .row { display: flex; justify-content: space-between; gap: 12px; align-items: center; }
+    .muted { color: #5c564c; font-size: 0.92rem; }
+    .pill { display: inline-block; border: 1px solid var(--line); padding: 2px 8px; margin-right: 6px; background: white; }
+    .pill.on { border-color: var(--bad); color: var(--bad); }
+    pre { white-space: pre-wrap; word-break: break-word; background: #241f1a; color: #f6f1e7; padding: 12px; font: 13px/1.4 ui-monospace, monospace; }
+    .bad { color: var(--bad); }
+    @media (max-width: 800px) { .layout { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+  <header>
+    <p class="muted">Orbit Commerce · synthetic demo · shop.brightline.example · tenant t_brightline</p>
+    <h1>Brightline Tools</h1>
+    <p class="banner">Synthetic demo storefront. No real charges, customers, or companies. Faults are injected from the host with <code>make break-nex32</code> and <code>make break-nex28</code>.</p>
+    <p id="pills" class="muted">Loading fault state…</p>
+  </header>
+  <main class="layout">
+    <section>
+      <h2>Catalog</h2>
+      <div id="catalog"></div>
+      <h2>Latest checkout</h2>
+      <div id="result" class="card muted">No checkout yet.</div>
+      <h2>Recent service lines</h2>
+      <pre id="tape">waiting for logs…</pre>
+    </section>
+    <aside>
+      <h2>Cart</h2>
+      <div id="cart" class="card muted">Empty</div>
+      <button id="checkout" type="button">Check out</button>
+    </aside>
+  </main>
+  <script>
+    const state = { cartId: null, lines: [] };
+
+    function money(minor) {
+      if (typeof minor !== "number") return "—";
+      return "$" + (minor / 100).toFixed(2);
+    }
+
+    async function refreshCatalog() {
+      const response = await fetch("/api/catalog");
+      const body = await response.json();
+      const root = document.querySelector("#catalog");
+      root.replaceChildren();
+      for (const product of body.products) {
+        const card = document.createElement("article");
+        card.className = "card";
+        const row = document.createElement("div");
+        row.className = "row";
+        const text = document.createElement("div");
+        const title = document.createElement("strong");
+        title.textContent = product.title;
+        const meta = document.createElement("div");
+        meta.className = "muted";
+        meta.textContent = product.sku + " · " + product.blurb + " · " + money(product.amountMinor);
+        text.append(title, meta);
+        const button = document.createElement("button");
+        button.type = "button";
+        button.textContent = "Add";
+        button.addEventListener("click", () => addItem(product.sku, product.title, product.amountMinor));
+        row.append(text, button);
+        card.append(row);
+        root.append(card);
+      }
+    }
+
+    async function ensureCart() {
+      if (state.cartId) return state.cartId;
+      const response = await fetch("/api/carts", { method: "POST" });
+      const body = await response.json();
+      state.cartId = body.id;
+      return state.cartId;
+    }
+
+    async function addItem(sku, title, amountMinor) {
+      const cartId = await ensureCart();
+      const response = await fetch("/api/carts/" + cartId + "/items", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ sku, qty: 1 }),
+      });
+      const body = await response.json();
+      state.lines = body.lines || [];
+      renderCart(title, amountMinor);
+    }
+
+    function renderCart() {
+      const root = document.querySelector("#cart");
+      root.classList.remove("muted");
+      root.replaceChildren();
+      if (!state.lines.length) {
+        root.textContent = "Empty";
+        root.classList.add("muted");
+        return;
+      }
+      for (const line of state.lines) {
+        const row = document.createElement("div");
+        row.textContent = line.qty + " × " + line.sku;
+        root.append(row);
+      }
+    }
+
+    function renderResult(status, body) {
+      const root = document.querySelector("#result");
+      root.classList.remove("muted");
+      root.replaceChildren();
+      const headline = document.createElement("p");
+      if (status === 200 && body.duplicate) {
+        headline.className = "bad";
+        headline.textContent = body.orderId + " was submitted " + body.charges.length + " times on " + body.router + " (" + body.version + ").";
+      } else if (status === 200) {
+        headline.textContent = body.orderId + " placed once on " + body.router + " (" + body.version + ") for " + money(body.totalMinor) + ".";
+      } else if (body.error === "OUT_OF_STOCK") {
+        headline.className = "bad";
+        headline.textContent = "Checkout returned Out of stock.";
+      } else if (body.error === "payment_failed") {
+        headline.className = "bad";
+        headline.textContent = "Payment failed. Risk scoring rejected the authorization.";
+      } else {
+        headline.textContent = "Checkout returned HTTP " + status + ".";
+      }
+      const pre = document.createElement("pre");
+      pre.textContent = JSON.stringify(body, null, 2);
+      root.append(headline, pre);
+    }
+
+    document.querySelector("#checkout").addEventListener("click", async () => {
+      if (!state.cartId || state.lines.length === 0) {
+        renderResult(400, { error: "cart is empty" });
+        return;
+      }
+      const response = await fetch("/api/checkout", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ cartId: state.cartId }),
+      });
+      const body = await response.json();
+      renderResult(response.status, body);
+      state.cartId = null;
+      state.lines = [];
+      renderCart();
+    });
+
+    async function refreshTape() {
+      const [scenarios, tape] = await Promise.all([fetch("/api/scenarios"), fetch("/api/tape")]);
+      const scenarioBody = await scenarios.json();
+      const pills = document.querySelector("#pills");
+      pills.replaceChildren();
+      for (const scenario of scenarioBody.scenarios || []) {
+        const pill = document.createElement("span");
+        pill.className = "pill" + (scenario.active ? " on" : "");
+        pill.textContent = scenario.id + (scenario.active ? " on" : " off") + (scenario.phase ? " · " + scenario.phase : "");
+        pills.append(pill);
+      }
+      const tapeBody = await tape.json();
+      const lines = []
+        .concat((tapeBody.orderLogs && tapeBody.orderLogs.logs) || [])
+        .concat((tapeBody.payLogs && tapeBody.payLogs.logs) || [])
+        .concat((tapeBody.checkoutLogs && tapeBody.checkoutLogs.logs) || [])
+        .slice(-16)
+        .map((row) => (row.host ? row.host + " " : "") + row.line);
+      document.querySelector("#tape").textContent = lines.join("\n") || "no lines yet";
+    }
+
+    refreshCatalog().catch((error) => {
+      document.querySelector("#catalog").textContent = String(error);
+    });
+    refreshTape().catch(() => undefined);
+    setInterval(() => { refreshTape().catch(() => undefined); }, 2000);
+  </script>
+</body>
+</html>

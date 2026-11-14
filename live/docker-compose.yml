@@ -1,0 +1,161 @@
+# Synthetic demo code for Nexus Intelligence. Not a real system.
+name: orbit-live
+
+x-node: &node
+  build:
+    context: ..
+    dockerfile: live/Dockerfile
+  restart: unless-stopped
+  init: true
+
+services:
+  observability:
+    <<: *node
+    command: ["live/observability/server.ts"]
+    environment:
+      PORT: "4400"
+      INGEST_PORT: "4490"
+      ORBIT_NEX28_PERIOD_MS: "300000"
+      ORBIT_NEX28_FAIL_MS: "150000"
+    ports:
+      - "127.0.0.1:4400:4400"
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:4400/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+      start_period: 5s
+
+  pricing:
+    build:
+      context: ..
+      dockerfile: live/pricing/Dockerfile
+    restart: unless-stopped
+    environment:
+      PORT: "4411"
+    ports:
+      - "127.0.0.1:4411:4411"
+    healthcheck:
+      test: ["CMD-SHELL", "bash -c 'echo >/dev/tcp/127.0.0.1/4411'"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+      start_period: 20s
+
+  cart:
+    <<: *node
+    command: ["live/cart/server.ts"]
+    environment:
+      PORT: "4410"
+    ports:
+      - "127.0.0.1:4410:4410"
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:4410/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+      start_period: 5s
+
+  payments:
+    <<: *node
+    command: ["live/payments/server.ts"]
+    environment:
+      PORT: "4413"
+      OBSERVABILITY_URL: http://observability:4400
+      OBSERVABILITY_INGEST_URL: http://observability:4490
+    ports:
+      - "127.0.0.1:4413:4413"
+    depends_on:
+      observability:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:4413/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+      start_period: 5s
+
+  orders:
+    <<: *node
+    command: ["live/orders/server.ts"]
+    environment:
+      PORT: "4414"
+      OBSERVABILITY_URL: http://observability:4400
+      OBSERVABILITY_INGEST_URL: http://observability:4490
+      PAYMENTS_URL: http://payments:4413
+      ORBIT_BULK_ATTEMPTS: "4"
+    ports:
+      - "127.0.0.1:4414:4414"
+    depends_on:
+      observability:
+        condition: service_healthy
+      payments:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:4414/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+      start_period: 5s
+
+  checkout:
+    <<: *node
+    command: ["live/checkout/server.ts"]
+    environment:
+      PORT: "4412"
+      OBSERVABILITY_URL: http://observability:4400
+      OBSERVABILITY_INGEST_URL: http://observability:4490
+      CART_URL: http://cart:4410
+      PRICING_URL: http://pricing:4411
+      ORDERS_URL: http://orders:4414
+    ports:
+      - "127.0.0.1:4412:4412"
+    depends_on:
+      observability:
+        condition: service_healthy
+      cart:
+        condition: service_healthy
+      pricing:
+        condition: service_healthy
+      orders:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:4412/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+      start_period: 8s
+
+  storefront:
+    <<: *node
+    command: ["live/storefront/server.ts"]
+    environment:
+      PORT: "4401"
+      CART_URL: http://cart:4410
+      CHECKOUT_URL: http://checkout:4412
+      PRICING_URL: http://pricing:4411
+      OBSERVABILITY_URL: http://observability:4400
+    ports:
+      - "127.0.0.1:4401:4401"
+    depends_on:
+      checkout:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:4401/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+      start_period: 5s
+
+  loadgen:
+    <<: *node
+    command: ["live/loadgen/server.ts"]
+    environment:
+      CART_URL: http://cart:4410
+      CHECKOUT_URL: http://checkout:4412
+      ORBIT_LOAD_INTERVAL_MS: "2000"
+    depends_on:
+      storefront:
+        condition: service_healthy
+      checkout:
+        condition: service_healthy

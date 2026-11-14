@@ -1,0 +1,7 @@
+# Synthetic demo code for Nexus Intelligence. Not a real system.
+.git
+build
+**/target
+**/*.class
+**/.pyc
+**/__pycache__

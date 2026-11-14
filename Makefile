@@ -22,6 +22,28 @@ check-java:
 check-rust:
 	cargo test --manifest-path payments-gateway/Cargo.toml --quiet
 
+.PHONY: live live-down break-nex32 break-nex28 break-nex30 heal
+
+COMPOSE := docker compose -f live/docker-compose.yml
+
+live:
+	$(COMPOSE) up -d --build
+
+live-down:
+	$(COMPOSE) down
+
+break-nex32:
+	curl -sf -X POST http://127.0.0.1:4400/control/faults -H 'content-type: application/json' -d '{"id":"NEX-32","active":true}'
+
+break-nex28:
+	curl -sf -X POST http://127.0.0.1:4400/control/faults -H 'content-type: application/json' -d '{"id":"NEX-28","active":true}'
+
+break-nex30:
+	curl -sf -X POST http://127.0.0.1:4400/control/faults -H 'content-type: application/json' -d '{"id":"NEX-30","active":true}'
+
+heal:
+	curl -sf -X POST http://127.0.0.1:4400/control/heal
+
 check-c:
 	mkdir -p build
 	gcc -Wall -Werror -Wextra -c cdn-edge/native/libedgeregex.c -o build/libedgeregex.o
