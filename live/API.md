@@ -258,3 +258,11 @@ These routes are on the same port. They are how `make break-nex32`, `make break-
 `GET /control/state` returns the raw fault slices (`active`, `activatedAt`, `periodMs`, `failMs`) for the services inside the compose network.
 
 Ingest (`POST` on port 4490 inside the compose network) is not published to the host.
+
+## Optional stores
+
+When `ORBIT_DATABASE_URL` is unset, order and payment rows stay in the service process. When it is set (`postgresql://USER@127.0.0.1:5432/orbit`), order-service and payments-gateway write the tables in `live/db/schema.sql`. `GET /api/orders?tenant=t_brightline` on the storefront reads them back through order-service. The browser order history merges that list with orders kept in `localStorage`.
+
+`GET /logs` is unchanged: `timestamp`, `service`, `host`, `level`, and `line`. When `ORBIT_OPENSEARCH_URL` is set, the same ingest is also bulk-indexed to `orbit-logs-YYYY.MM.DD`. Failures increment a drop counter and do not block the request. `GET /health` then adds `opensearch.shipped` and `opensearch.dropped`.
+
+Example duplicate query and the OpenSearch term query are in `live/README.md`.

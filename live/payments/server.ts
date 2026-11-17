@@ -4,6 +4,7 @@ import { columnQuery, formatBuilderLog } from "../../risk-feature-builder/src/bu
 import { clockParts } from "../lib/clock.ts";
 import { FEATURE_LIMIT, featureCount, fetchFaults, nex28Phase, type FaultState } from "../lib/faults.ts";
 import { listen, readBody, sendJson } from "../lib/http.ts";
+import { insertPayment } from "../lib/ledger.ts";
 import { emitLog, emitMetric } from "../lib/telemetry.ts";
 
 const port = Number(process.env.PORT ?? 4413);
@@ -49,21 +50,28 @@ function emitLoaded(features: number): void {
   });
 }
 
-function emitPanic(features: number, traceId: string): void {
+function emitPanic(features: number, traceId: string, orderId: string): void {
   const first = new Date();
   const second = new Date(first.getTime() + 1);
   const panicClock = clockParts(first);
   const httpClock = clockParts(second);
-  emitLog({
-    timestamp: panicClock.iso,
+  const shared = {
     service: "payments-gateway",
-    level: "ERROR",
+    level: "ERROR" as const,
+    scenario: "NEX-28",
+    traceId,
+    orderId,
+    httpStatus: 500,
+    serviceVersion: "3.41.0",
+  };
+  emitLog({
+    ...shared,
+    timestamp: panicClock.iso,
     line: `${panicClock.lineTime} ERROR risk-scoring thread=loader-2 PANIC: feature count ${features} exceeds preallocated limit ${FEATURE_LIMIT} (FeatureTable::load) - called unwrap() on Err(TooManyFeatures)`,
   });
   emitLog({
+    ...shared,
     timestamp: httpClock.iso,
-    service: "payments-gateway",
-    level: "ERROR",
     line: `${httpClock.lineTime} ERROR http 500 POST /v1/authorizations trace_id=${traceId} trace=risk.score -> panic`,
   });
 }
@@ -101,13 +109,41 @@ listen(port, async (req, res) => {
   }
   if (req.method === "POST" && url.pathname === "/v1/authorizations") {
     const started = Date.now();
-    const body = JSON.parse(await readBody(req)) as { traceId?: string; idempotencyKey?: string; orderId?: string };
+    const body = JSON.parse(await readBody(req)) as {
+      traceId?: string;
+      idempotencyKey?: string;
+      orderId?: string;
+      amountMinor?: number;
+    };
     const traceId = body.traceId ?? "trace";
     const fault = faults?.["NEX-28"];
     const features = fault ? featureCount(fault) : 189;
     const over = features > FEATURE_LIMIT;
+    const amount = Number(body.amountMinor ?? 0);
+    const orderId = body.orderId ?? "unknown";
+    const idempotencyKey = body.idempotencyKey ?? null;
+    const paymentId = `pay-${orderId}-${(idempotencyKey ?? "none").slice(-12)}`;
     if (over) {
-      emitPanic(features, traceId);
+      emitPanic(features, traceId, orderId);
+      await insertPayment({
+        paymentId,
+        orderId,
+        chargeId: `ch-${paymentId}`,
+        amountCents: amount,
+        status: "failed",
+        provider: "risk-scoring",
+        idempotencyKey,
+      });
+    } else {
+      await insertPayment({
+        paymentId,
+        orderId,
+        chargeId: `ch-${paymentId}`,
+        amountCents: amount,
+        status: "captured",
+        provider: "card",
+        idempotencyKey,
+      });
     }
     const latencyMs = Date.now() - started;
     emitMetric({

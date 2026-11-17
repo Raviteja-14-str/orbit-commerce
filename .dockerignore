@@ -1,5 +1,6 @@
 # Synthetic demo code for Nexus Intelligence. Not a real system.
-.git
+live/node_modules
+**/node_modules
 build
 **/target
 **/*.class

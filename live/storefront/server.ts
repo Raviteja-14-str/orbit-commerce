@@ -127,6 +127,12 @@ listen(port, async (req, res) => {
     sendJson(res, scenarios.status, scenarios.body);
     return;
   }
+  if (req.method === "GET" && url.pathname === "/api/orders") {
+    const tenant = url.searchParams.get("tenant") ?? "t_brightline";
+    const listed = await proxyJson(`${process.env.ORDERS_URL ?? "http://127.0.0.1:4414"}/v1/orders?tenant=${encodeURIComponent(tenant)}`);
+    sendJson(res, listed.status, listed.body);
+    return;
+  }
   if (req.method === "GET" && url.pathname === "/api/tape") {
     const orderLogs = await proxyJson(`${observability}/logs?service=order-service&limit=12`);
     const payLogs = await proxyJson(`${observability}/logs?service=payments-gateway&limit=8`);

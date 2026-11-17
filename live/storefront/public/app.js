@@ -421,18 +421,46 @@ function renderOrder(id) {
   </div>`;
 }
 
-function renderOrders() {
-  const list = orders();
+async function renderOrders() {
+  main.innerHTML = `<div class="wrap"><h1>Order history</h1><p class="muted">Loading the ledger…</p></div>`;
+  let remote = [];
+  try {
+    const response = await fetch("/api/orders?tenant=t_brightline");
+    if (response.ok) {
+      const body = await response.json();
+      remote = body.orders || [];
+    }
+  } catch {
+    remote = [];
+  }
+  const remoteIds = new Set(remote.map((order) => order.orderId));
+  const local = orders().filter((record) => !remoteIds.has(record.body.orderId));
+  const carts = new Map();
+  for (const order of remote) {
+    const key = order.cartId || order.orderId;
+    const group = carts.get(key) || [];
+    group.push(order);
+    carts.set(key, group);
+  }
+  const duplicateNotes = [...carts.entries()]
+    .filter(([, group]) => group.length > 1)
+    .map(([cartId, group]) => `<div class="alert warn"><strong>Cart ${cartId} was submitted ${group.length} times.</strong> ${group.map((order) => order.orderId).join(", ")} · router ${group[0].routerId || "n/a"} ${group[0].serviceVersion || ""}.</div>`)
+    .join("");
+  const remoteRows = remote.map((order) => {
+    const charges = (order.charges || []).map((charge) => `${charge.idempotencyKey || charge.chargeId} · ${charge.status} · ${money(charge.amountCents)}`).join("<br />");
+    return `<tr><td><a href="/orders/${encodeURIComponent(order.orderId)}">${order.orderId}</a><div class="sku">${order.cartId || ""}</div></td><td>${new Date(order.createdAt).toLocaleString()}</td><td>${order.status}<br /><span class="sku">${order.routerId || ""} ${order.serviceVersion || ""}</span></td><td>${charges || "—"}</td></tr>`;
+  }).join("");
+  const localRows = local.map((record) => {
+    const id = record.body.orderId || `failed-${record.at}`;
+    const chargeList = record.body.charges || [];
+    const result = record.body.duplicate ? `${chargeList.length} submissions` : (record.body.error || "Placed");
+    const detail = chargeList.map((charge) => `#${charge.attempt} ${charge.idempotencyKey} · ${charge.paymentStatus === 200 ? "Approved" : "Declined"}`).join("<br />");
+    return `<tr><td><a href="/orders/${encodeURIComponent(id)}">${record.body.orderId || "Reservation failed"}</a></td><td>${new Date(record.at).toLocaleString()}</td><td>${result}</td><td>${detail || "—"}</td></tr>`;
+  }).join("");
+  const rows = remoteRows + localRows;
   main.innerHTML = `<div class="wrap"><h1>Order history</h1>
-    ${list.length ? `<table><thead><tr><th>Order</th><th>When</th><th>Result</th><th>Charges</th></tr></thead><tbody>
-      ${list.map((record) => {
-        const id = record.body.orderId || `failed-${record.at}`;
-        const chargeList = record.body.charges || [];
-        const result = record.body.duplicate ? `${chargeList.length} submissions` : (record.body.error || "Placed");
-        const detail = chargeList.map((charge) => `#${charge.attempt} ${charge.idempotencyKey} · ${charge.paymentStatus === 200 ? "Approved" : "Declined"}`).join("<br />");
-        return `<tr><td><a href="/orders/${encodeURIComponent(id)}">${record.body.orderId || "Reservation failed"}</a></td><td>${new Date(record.at).toLocaleString()}</td><td>${result}</td><td>${detail || "—"}</td></tr>`;
-      }).join("")}
-    </tbody></table>` : `<p>No orders in this browser yet.</p>`}
+    ${duplicateNotes}
+    ${rows ? `<table><thead><tr><th>Order</th><th>When</th><th>Result</th><th>Charges</th></tr></thead><tbody>${rows}</tbody></table>` : `<p>No orders yet.</p>`}
   </div>`;
 }
 

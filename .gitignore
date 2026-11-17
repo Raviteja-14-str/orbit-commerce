@@ -6,3 +6,5 @@ __pycache__/
 *.class
 *.o
 .DS_Store
+live/node_modules
+live/db/.nexus_ro_password

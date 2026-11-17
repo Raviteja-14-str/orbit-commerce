@@ -6,6 +6,7 @@ import { clockParts } from "../lib/clock.ts";
 import { fetchFaults, type FaultState } from "../lib/faults.ts";
 import { ansibleRecap, fleetBuildInfo, MISSED_ROUTER, ORDER_ROUTERS } from "../lib/fleet.ts";
 import { listen, readBody, sendJson } from "../lib/http.ts";
+import { insertOrder, listOrders, type LedgerItem } from "../lib/ledger.ts";
 import { emitBuildInfo, emitDeploy, emitLog, emitMetric } from "../lib/telemetry.ts";
 
 const port = Number(process.env.PORT ?? 4414);
@@ -81,7 +82,13 @@ async function authorize(orderId: string, idempotencyKey: string, traceId: strin
 listen(port, async (req, res) => {
   const url = new URL(req.url ?? "/", "http://127.0.0.1");
   if (req.method === "GET" && url.pathname === "/health") {
-    sendJson(res, 200, { status: "ok", service: "order-service", routers: ORDER_ROUTERS.length });
+    sendJson(res, 200, { status: "ok", service: "order-service", routers: ORDER_ROUTERS.length, database: Boolean(process.env.ORBIT_DATABASE_URL) });
+    return;
+  }
+  if (req.method === "GET" && url.pathname === "/v1/orders") {
+    const tenant = url.searchParams.get("tenant") ?? "t_brightline";
+    const orders = await listOrders(tenant);
+    sendJson(res, 200, { orders });
     return;
   }
   if (req.method !== "POST" || url.pathname !== "/v1/orders") {
@@ -94,12 +101,49 @@ listen(port, async (req, res) => {
     tenant: string;
     amountMinor: number;
     traceId: string;
+    cartId?: string;
+    status?: string;
+    items?: LedgerItem[];
   };
+  const items: LedgerItem[] = body.items && body.items.length > 0
+    ? body.items
+    : [{ sku: "SKU-ORDER", qty: 1, unitPriceCents: body.amountMinor }];
+  if (body.status === "out_of_stock") {
+    await insertOrder({
+      orderId: body.orderId,
+      tenantId: body.tenant,
+      cartId: body.cartId ?? null,
+      idempotencyKey: null,
+      status: "out_of_stock",
+      totalCents: body.amountMinor,
+      currency: "USD",
+      routerId: null,
+      serviceVersion: null,
+      items,
+    });
+    sendJson(res, 201, { orderId: body.orderId, status: "out_of_stock" });
+    return;
+  }
   const router = pickRouter();
   const flag = body.tenant === "t_brightline" || body.tenant === "t_kestrel";
   const order: Order = { id: body.orderId, tenant: body.tenant, fillStatus: "unknown" };
-  const charges: { attempt: number; idempotencyKey: string; paymentStatus: number }[] = [];
+  const charges: { attempt: number; idempotencyKey: string; paymentStatus: number; orderId: string }[] = [];
   const lines: string[] = [];
+
+  async function persistAttempt(attemptOrderId: string, idempotencyKey: string, status: string): Promise<void> {
+    await insertOrder({
+      orderId: attemptOrderId,
+      tenantId: body.tenant,
+      cartId: body.cartId ?? null,
+      idempotencyKey,
+      status,
+      totalCents: body.amountMinor,
+      currency: "USD",
+      routerId: router.host,
+      serviceVersion: router.version,
+      items,
+    });
+  }
 
   if (flag && router.version === "5.5.3") {
     const bulk = new BulkRepricer();
@@ -113,11 +157,33 @@ listen(port, async (req, res) => {
     );
     for (const line of bulk.logs) {
       lines.push(line);
-      emitLog({ timestamp: clock.iso, service: "order-service", host: router.host, level: "INFO", line });
+      emitLog({
+        timestamp: clock.iso,
+        service: "order-service",
+        host: router.host,
+        level: "INFO",
+        line,
+        scenario: "NEX-32",
+        orderId: body.orderId,
+        cartId: body.cartId,
+        tenantId: body.tenant,
+        routerId: router.host,
+        serviceVersion: router.version,
+        traceId: body.traceId,
+      });
     }
     for (const submission of submissions) {
-      const paymentStatus = await authorize(order.id, submission.idempotencyKey, body.traceId, body.amountMinor);
-      charges.push({ attempt: submission.attempt, idempotencyKey: submission.idempotencyKey, paymentStatus });
+      const attemptOrderId = submission.attempt === 1 ? body.orderId : `${body.orderId}-a${submission.attempt}`;
+      await persistAttempt(attemptOrderId, submission.idempotencyKey, "authorizing");
+      const paymentStatus = await authorize(attemptOrderId, submission.idempotencyKey, body.traceId, body.amountMinor);
+      const status = paymentStatus === 200 ? "placed" : "payment_failed";
+      await persistAttempt(attemptOrderId, submission.idempotencyKey, status);
+      charges.push({
+        attempt: submission.attempt,
+        idempotencyKey: submission.idempotencyKey,
+        paymentStatus,
+        orderId: attemptOrderId,
+      });
     }
   } else if (flag && router.version === "5.6.0") {
     const pricing = new ContractPricing();
@@ -128,12 +194,16 @@ listen(port, async (req, res) => {
       emitLog({ timestamp: clock.iso, service: "order-service", host: router.host, level: "INFO", line });
     }
     const idempotencyKey = `idem-${order.id}-once`;
-    const paymentStatus = await authorize(order.id, idempotencyKey, body.traceId, body.amountMinor);
-    charges.push({ attempt: 1, idempotencyKey, paymentStatus });
+    await persistAttempt(body.orderId, idempotencyKey, "authorizing");
+    const paymentStatus = await authorize(body.orderId, idempotencyKey, body.traceId, body.amountMinor);
+    await persistAttempt(body.orderId, idempotencyKey, paymentStatus === 200 ? "placed" : "payment_failed");
+    charges.push({ attempt: 1, idempotencyKey, paymentStatus, orderId: body.orderId });
   } else {
     const idempotencyKey = `idem-${order.id}-once`;
-    const paymentStatus = await authorize(order.id, idempotencyKey, body.traceId, body.amountMinor);
-    charges.push({ attempt: 1, idempotencyKey, paymentStatus });
+    await persistAttempt(body.orderId, idempotencyKey, "authorizing");
+    const paymentStatus = await authorize(body.orderId, idempotencyKey, body.traceId, body.amountMinor);
+    await persistAttempt(body.orderId, idempotencyKey, paymentStatus === 200 ? "placed" : "payment_failed");
+    charges.push({ attempt: 1, idempotencyKey, paymentStatus, orderId: body.orderId });
   }
 
   const approved = charges.filter((charge) => charge.paymentStatus === 200).length;

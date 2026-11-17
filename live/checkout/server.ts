@@ -99,13 +99,38 @@ listen(port, async (req, res) => {
       service: "checkout",
       level: "ERROR",
       line: reserved.log,
+      scenario: "NEX-30",
+      traceId: id,
+      cartId: cart.id,
+      tenantId: cart.tenant,
+      httpStatus: 409,
     });
   }
   if (reserved.status !== "reserved") {
+    const failedId = `ORD-${orderSequence}`;
+    orderSequence += 1;
+    const failedItems = cart.lines.map((line) => ({
+      sku: line.sku,
+      qty: line.qty,
+      unitPriceCents: prefetched.get(line.sku) ?? 0,
+    }));
+    await fetch(`${ordersUrl}/v1/orders`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        orderId: failedId,
+        tenant: cart.tenant,
+        cartId: cart.id,
+        amountMinor: priced.totalMinor,
+        traceId: id,
+        status: "out_of_stock",
+        items: failedItems,
+      }),
+    }).catch(() => undefined);
     spans.push({ name: "checkout.place_order", service: "checkout", durationMs: Date.now() - started, status: "ERROR" });
     emitTrace({ traceId: id, root: "checkout.place_order", status: "ERROR", durationMs: Date.now() - started, startedAt, spans });
     emitMetric({ timestamp: new Date().toISOString(), service: "checkout", ok: false, latencyMs: Date.now() - started });
-    sendJson(res, 409, { error: "OUT_OF_STOCK", traceId: id, log: reserved.log ?? null });
+    sendJson(res, 409, { error: "OUT_OF_STOCK", orderId: failedId, traceId: id, log: reserved.log ?? null });
     return;
   }
 
@@ -115,7 +140,18 @@ listen(port, async (req, res) => {
   const orderResponse = await fetch(`${ordersUrl}/v1/orders`, {
     method: "POST",
     headers: { "content-type": "application/json" },
-    body: JSON.stringify({ orderId, tenant: cart.tenant, amountMinor: priced.totalMinor, traceId: id }),
+    body: JSON.stringify({
+      orderId,
+      tenant: cart.tenant,
+      cartId: cart.id,
+      amountMinor: priced.totalMinor,
+      traceId: id,
+      items: cart.lines.map((line) => ({
+        sku: line.sku,
+        qty: line.qty,
+        unitPriceCents: prefetched.get(line.sku) ?? 0,
+      })),
+    }),
   });
   const orderBody = (await orderResponse.json()) as {
     router: string;

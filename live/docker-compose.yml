@@ -9,6 +9,25 @@ x-node: &node
   init: true
 
 services:
+  postgres:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: orbit
+      POSTGRES_PASSWORD: orbit
+      POSTGRES_DB: orbit
+      NEXUS_RO_PASSWORD: orbit-demo-ro
+    ports:
+      - "127.0.0.1:5432:5432"
+    volumes:
+      - ./db/docker-init.sh:/docker-entrypoint-initdb.d/01-init.sh:ro
+      - ./db:/orbit-sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U orbit -d orbit"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+      start_period: 5s
+
   observability:
     <<: *node
     command: ["live/observability/server.ts"]
@@ -63,10 +82,13 @@ services:
       PORT: "4413"
       OBSERVABILITY_URL: http://observability:4400
       OBSERVABILITY_INGEST_URL: http://observability:4490
+      ORBIT_DATABASE_URL: postgres://orbit:orbit@postgres:5432/orbit
     ports:
       - "127.0.0.1:4413:4413"
     depends_on:
       observability:
+        condition: service_healthy
+      postgres:
         condition: service_healthy
     healthcheck:
       test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:4413/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
@@ -84,12 +106,15 @@ services:
       OBSERVABILITY_INGEST_URL: http://observability:4490
       PAYMENTS_URL: http://payments:4413
       ORBIT_BULK_ATTEMPTS: "4"
+      ORBIT_DATABASE_URL: postgres://orbit:orbit@postgres:5432/orbit
     ports:
       - "127.0.0.1:4414:4414"
     depends_on:
       observability:
         condition: service_healthy
       payments:
+        condition: service_healthy
+      postgres:
         condition: service_healthy
     healthcheck:
       test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:4414/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
@@ -135,6 +160,7 @@ services:
       CHECKOUT_URL: http://checkout:4412
       PRICING_URL: http://pricing:4411
       OBSERVABILITY_URL: http://observability:4400
+      ORDERS_URL: http://orders:4414
     ports:
       - "127.0.0.1:4401:4401"
     depends_on:
@@ -159,3 +185,14 @@ services:
         condition: service_healthy
       checkout:
         condition: service_healthy
+
+  opensearch:
+    profiles: ["search"]
+    image: opensearchproject/opensearch:2.17.1
+    environment:
+      discovery.type: single-node
+      DISABLE_SECURITY_PLUGIN: "true"
+      OPENSEARCH_JAVA_OPTS: "-Xms256m -Xmx256m"
+      DISABLE_INSTALL_DEMO_CONFIG: "true"
+    ports:
+      - "127.0.0.1:59282:9200"

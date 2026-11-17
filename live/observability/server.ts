@@ -4,6 +4,7 @@ import { createServer, type IncomingMessage, type ServerResponse } from "node:ht
 import { emptyFaults, featureCount, nex28Phase, type FaultState, type FaultSlice } from "../lib/faults.ts";
 import { ansibleRecap, fleetBuildInfo, type HostBuild } from "../lib/fleet.ts";
 import { readBody, sendJson } from "../lib/http.ts";
+import { enqueueLog, ensureIndexTemplate, shipStats, type ShipLog } from "./ship-logs.ts";
 
 const publicPort = Number(process.env.PORT ?? 4400);
 const ingestPort = Number(process.env.INGEST_PORT ?? 4490);
@@ -195,7 +196,15 @@ async function handlePublic(req: IncomingMessage, res: ServerResponse): Promise<
     return;
   }
   if (req.method === "GET" && url.pathname === "/health") {
-    sendJson(res, 200, { status: "ok", service: "orbit-observability", time: new Date().toISOString() });
+    const body: { status: string; service: string; time: string; opensearch?: ReturnType<typeof shipStats> } = {
+      status: "ok",
+      service: "orbit-observability",
+      time: new Date().toISOString(),
+    };
+    if (process.env.ORBIT_OPENSEARCH_URL) {
+      body.opensearch = shipStats();
+    }
+    sendJson(res, 200, body);
     return;
   }
   if (req.method === "GET" && url.pathname === "/scenarios") {
@@ -282,7 +291,31 @@ async function handleIngest(req: IncomingMessage, res: ServerResponse): Promise<
   }
   const payload = JSON.parse(await readBody(req) || "{}") as Record<string, unknown>;
   if (url.pathname === "/ingest/log") {
-    pushCap(logs, payload as unknown as LogRecord, 5000);
+    const record = {
+      timestamp: String(payload.timestamp ?? ""),
+      service: String(payload.service ?? ""),
+      level: String(payload.level ?? ""),
+      line: String(payload.line ?? ""),
+      ...(payload.host ? { host: String(payload.host) } : {}),
+    };
+    pushCap(logs, record, 5000);
+    const ship: ShipLog = {
+      timestamp: record.timestamp,
+      service: record.service,
+      level: record.level,
+      line: record.line,
+      host: record.host,
+      traceId: typeof payload.traceId === "string" ? payload.traceId : undefined,
+      spanId: typeof payload.spanId === "string" ? payload.spanId : undefined,
+      orderId: typeof payload.orderId === "string" ? payload.orderId : undefined,
+      cartId: typeof payload.cartId === "string" ? payload.cartId : undefined,
+      tenantId: typeof payload.tenantId === "string" ? payload.tenantId : undefined,
+      routerId: typeof payload.routerId === "string" ? payload.routerId : undefined,
+      serviceVersion: typeof payload.serviceVersion === "string" ? payload.serviceVersion : undefined,
+      httpStatus: typeof payload.httpStatus === "number" ? payload.httpStatus : undefined,
+      scenario: typeof payload.scenario === "string" ? payload.scenario : undefined,
+    };
+    enqueueLog(ship);
   } else if (url.pathname === "/ingest/metric") {
     pushCap(metrics, payload as unknown as MetricRecord, 8000);
   } else if (url.pathname === "/ingest/trace") {
@@ -317,3 +350,4 @@ function serve(port: number, handler: (req: IncomingMessage, res: ServerResponse
 
 serve(publicPort, handlePublic);
 serve(ingestPort, handleIngest);
+void ensureIndexTemplate().catch(() => undefined);

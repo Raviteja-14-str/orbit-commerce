@@ -6,6 +6,15 @@ export interface LogEvent {
   host?: string;
   level: string;
   line: string;
+  traceId?: string;
+  spanId?: string;
+  orderId?: string;
+  cartId?: string;
+  tenantId?: string;
+  routerId?: string;
+  serviceVersion?: string;
+  httpStatus?: number;
+  scenario?: string;
 }
 
 export interface MetricEvent {
