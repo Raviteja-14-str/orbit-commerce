@@ -1,0 +1,87 @@
+<!-- Synthetic demo code for Nexus Intelligence. Not a real system. -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Orbit Supply · tools, lighting, and job-site essentials</title>
+  <link rel="stylesheet" href="/styles.css" />
+  <link rel="icon" href="/favicon.svg" />
+</head>
+<body>
+  <a class="skip" href="#main">Skip to content</a>
+  <div class="util">
+    <div class="util-inner">
+      <span>Pro account · Brightline Tools · tenant t_brightline</span>
+      <span><a href="/account">Contract price book</a> · <a href="/orders">Orders</a> · Help 555-0100</span>
+    </div>
+  </div>
+  <header class="bar">
+    <div class="bar-inner">
+      <a class="logo" href="/">
+        <span class="mark" aria-hidden="true">O</span>
+        <span><strong>ORBIT</strong><small>SUPPLY</small></span>
+      </a>
+      <form class="search" action="/search" role="search">
+        <label class="sr-only" for="q">Search products</label>
+        <input id="q" name="q" type="search" placeholder="Search tools, lighting, fasteners…" autocomplete="off" />
+        <button type="submit">Search</button>
+      </form>
+      <div class="tools">
+        <button class="menu-btn" type="button" aria-expanded="false" aria-controls="dept">Menu</button>
+        <a href="/account"><strong>Account</strong><span class="sub">Brightline</span></a>
+        <a href="/orders"><strong>Orders</strong><span class="sub">History</span></a>
+        <a href="/cart" id="cart-link"><strong>Cart <span class="cart-count" id="cart-count">0</span></strong><span class="sub">View cart</span></a>
+      </div>
+    </div>
+  </header>
+  <nav class="nav" id="dept" aria-label="Departments">
+    <div class="nav-inner" id="dept-links"></div>
+  </nav>
+  <div class="dept-panel" id="dept-panel" hidden></div>
+  <main id="main" class="wrap" tabindex="-1"></main>
+  <footer>
+    <div class="foot">
+      <div>
+        <strong style="color:#fff">Orbit Supply</strong>
+        <p>Job-site and home project goods for the Brightline Tools contract. Operated by Orbit Commerce, a fictional demo company.</p>
+        <div class="trust" aria-label="Demo trust notes">
+          <span>Contract pricing</span>
+          <span>Job-site delivery</span>
+          <span>30-day stocked returns</span>
+        </div>
+      </div>
+      <div>
+        <strong style="color:#fff">Shop</strong>
+        <a href="/c/power-tools">Power tools</a>
+        <a href="/c/hand-tools">Hand tools</a>
+        <a href="/c/lighting">Lighting</a>
+        <a href="/c/fasteners">Fasteners</a>
+      </div>
+      <div>
+        <strong style="color:#fff">Account</strong>
+        <a href="/account">B2B bulk order</a>
+        <a href="/orders">Order history</a>
+        <a href="/cart">Cart</a>
+      </div>
+      <div>
+        <strong style="color:#fff">Help</strong>
+        <a href="/account">Shipping &amp; returns</a>
+        <a href="/images/CREDITS.md">Photo credits</a>
+      </div>
+      <p class="legal">© 2026 Orbit Commerce, Inc. Fictional demonstration company. No real orders are placed, no card is charged, and no personal data is collected. Host shop.brightline.example. Prices on the receipt come from the pricing service. Trust marks above are labels in this demo, not third-party certifications.</p>
+    </div>
+  </footer>
+  <div class="drawer" id="drawer" hidden>
+    <button class="backdrop" type="button" data-close-drawer aria-label="Close cart"></button>
+    <aside class="panel" role="dialog" aria-modal="true" aria-labelledby="drawer-title">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <h2 id="drawer-title" style="margin:0">Cart</h2>
+        <button class="btn ghost" type="button" data-close-drawer>Close</button>
+      </div>
+      <div id="drawer-body"></div>
+    </aside>
+  </div>
+  <script src="/app.js" defer></script>
+</body>
+</html>

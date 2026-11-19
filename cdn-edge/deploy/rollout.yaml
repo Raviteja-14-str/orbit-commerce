@@ -1,0 +1,8 @@
+# Synthetic demo code for Nexus Intelligence. Not a real system.
+# dpl-edge-88213. Fast-path pushes the bundle to all 40 PoPs. No canary.
+mode: fast-path
+pops: 40
+canary: false
+bundle: 2026.11.04-r3
+rule: ORB-WAF-1187
+rule_mode: simulate

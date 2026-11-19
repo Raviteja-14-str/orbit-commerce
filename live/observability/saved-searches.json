@@ -1,0 +1,46 @@
+{
+  "title": "Orbit log saved searches",
+  "description": "Synthetic demo searches for OpenSearch Dashboards or Grafana's OpenSearch datasource. Not a real system.",
+  "index": "orbit-logs-*",
+  "searches": [
+    {
+      "id": "nex-32-duplicates",
+      "title": "NEX-32 BulkRepricer resubmits",
+      "query": {
+        "query": {
+          "bool": {
+            "filter": [
+              { "term": { "scenario": "NEX-32" } },
+              { "term": { "router_id": "or-router-07" } }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "nex-28-risk-panic",
+      "title": "NEX-28 risk scoring panic",
+      "query": {
+        "query": {
+          "bool": {
+            "filter": [
+              { "term": { "scenario": "NEX-28" } },
+              { "term": { "level": "ERROR" } }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "nex-30-out-of-stock",
+      "title": "NEX-30 reservation mapped to out of stock",
+      "query": {
+        "query": {
+          "bool": {
+            "filter": [{ "term": { "scenario": "NEX-30" } }]
+          }
+        }
+      }
+    }
+  ]
+}

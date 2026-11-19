@@ -1,0 +1,8 @@
+# Synthetic demo code for Nexus Intelligence. Not a real system.
+live/node_modules
+**/node_modules
+build
+**/target
+**/*.class
+**/.pyc
+**/__pycache__
