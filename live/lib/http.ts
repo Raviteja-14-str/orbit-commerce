@@ -33,6 +33,7 @@ export function listen(port: number, handler: (req: IncomingMessage, res: Server
   const server = createServer((req, res) => {
     Promise.resolve(handler(req, res)).catch((error: unknown) => {
       const message = error instanceof Error ? error.message : "error";
+      console.error(`orbit http: ${message}`);
       if (!res.headersSent) {
         sendJson(res, 500, { error: message });
       } else {
