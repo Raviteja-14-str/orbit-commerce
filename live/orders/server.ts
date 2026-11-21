@@ -6,7 +6,8 @@ import { clockParts } from "../lib/clock.ts";
 import { fetchFaults, type FaultState } from "../lib/faults.ts";
 import { ansibleRecap, fleetBuildInfo, MISSED_ROUTER, ORDER_ROUTERS } from "../lib/fleet.ts";
 import { listen, readBody, sendJson } from "../lib/http.ts";
-import { insertOrder, listOrders, type LedgerItem } from "../lib/ledger.ts";
+import { allocateOrderId, insertOrder, listOrders, markOrderRunStarted, type LedgerItem } from "../lib/ledger.ts";
+import { attemptOrderId } from "../lib/order-ids.ts";
 import { emitBuildInfo, emitDeploy, emitLog, emitMetric } from "../lib/telemetry.ts";
 
 const port = Number(process.env.PORT ?? 4414);
@@ -63,6 +64,22 @@ setInterval(() => {
 }, 500);
 void refresh();
 
+async function bootLedger(): Promise<void> {
+  if (!process.env.ORBIT_DATABASE_URL) {
+    return;
+  }
+  for (;;) {
+    try {
+      await markOrderRunStarted();
+      return;
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      console.error(`orbit orders: could not prepare the order id counter; will not issue ORD-55120 (${message})`);
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+    }
+  }
+}
+
 function pickRouter(): { host: string; version: string } {
   const host = ORDER_ROUTERS[cursor % ORDER_ROUTERS.length];
   cursor += 1;
@@ -79,10 +96,16 @@ async function authorize(orderId: string, idempotencyKey: string, traceId: strin
   return response.status;
 }
 
-listen(port, async (req, res) => {
+function start(): void {
+  listen(port, async (req, res) => {
   const url = new URL(req.url ?? "/", "http://127.0.0.1");
   if (req.method === "GET" && url.pathname === "/health") {
     sendJson(res, 200, { status: "ok", service: "order-service", routers: ORDER_ROUTERS.length, database: Boolean(process.env.ORBIT_DATABASE_URL) });
+    return;
+  }
+  if (req.method === "POST" && url.pathname === "/v1/order-ids") {
+    const orderId = await allocateOrderId();
+    sendJson(res, 200, { orderId });
     return;
   }
   if (req.method === "GET" && url.pathname === "/v1/orders") {
@@ -173,16 +196,16 @@ listen(port, async (req, res) => {
       });
     }
     for (const submission of submissions) {
-      const attemptOrderId = submission.attempt === 1 ? body.orderId : `${body.orderId}-a${submission.attempt}`;
-      await persistAttempt(attemptOrderId, submission.idempotencyKey, "authorizing");
-      const paymentStatus = await authorize(attemptOrderId, submission.idempotencyKey, body.traceId, body.amountMinor);
+      const attemptId = attemptOrderId(body.orderId, submission.attempt);
+      await persistAttempt(attemptId, submission.idempotencyKey, "authorizing");
+      const paymentStatus = await authorize(attemptId, submission.idempotencyKey, body.traceId, body.amountMinor);
       const status = paymentStatus === 200 ? "placed" : "payment_failed";
-      await persistAttempt(attemptOrderId, submission.idempotencyKey, status);
+      await persistAttempt(attemptId, submission.idempotencyKey, status);
       charges.push({
         attempt: submission.attempt,
         idempotencyKey: submission.idempotencyKey,
         paymentStatus,
-        orderId: attemptOrderId,
+        orderId: attemptId,
       });
     }
   } else if (flag && router.version === "5.6.0") {
@@ -226,3 +249,6 @@ listen(port, async (req, res) => {
     duplicate: charges.length > 1,
   });
 });
+}
+
+void bootLedger().then(start);

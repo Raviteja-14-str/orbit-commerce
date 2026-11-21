@@ -40,3 +40,15 @@ CREATE INDEX IF NOT EXISTS orders_status_idx ON orders (status);
 CREATE INDEX IF NOT EXISTS payments_order_idx ON payments (order_id);
 CREATE INDEX IF NOT EXISTS payments_idempotency_idx ON payments (idempotency_key);
 CREATE INDEX IF NOT EXISTS payments_status_created_idx ON payments (status, created_at DESC);
+
+-- Next checkout id. order-service moves this past the highest ORD- number on startup.
+CREATE TABLE IF NOT EXISTS order_counters (
+    name text PRIMARY KEY,
+    next_value bigint NOT NULL
+);
+
+-- Watermark for the current order-service process. Payments for older orders are refused.
+CREATE TABLE IF NOT EXISTS service_runs (
+    service text PRIMARY KEY,
+    started_at timestamptz NOT NULL
+);

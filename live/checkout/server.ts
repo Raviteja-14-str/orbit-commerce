@@ -14,7 +14,21 @@ const pricingUrl = process.env.PRICING_URL ?? "http://127.0.0.1:4411";
 const ordersUrl = process.env.ORDERS_URL ?? "http://127.0.0.1:4414";
 
 let faults: FaultState | null = null;
-let orderSequence = 55120;
+
+async function allocateOrderId(): Promise<string> {
+  const response = await fetch(`${ordersUrl}/v1/order-ids`, { method: "POST" });
+  if (!response.ok) {
+    const message = `could not allocate an order id (${response.status})`;
+    console.error(`orbit checkout: ${message}`);
+    throw new Error(message);
+  }
+  const body = (await response.json()) as { orderId?: string };
+  if (!body.orderId) {
+    console.error("orbit checkout: order id response was empty");
+    throw new Error("order id missing");
+  }
+  return body.orderId;
+}
 
 setInterval(() => {
   void fetchFaults(observability)
@@ -107,26 +121,33 @@ listen(port, async (req, res) => {
     });
   }
   if (reserved.status !== "reserved") {
-    const failedId = `ORD-${orderSequence}`;
-    orderSequence += 1;
+    const failedId = await allocateOrderId();
     const failedItems = cart.lines.map((line) => ({
       sku: line.sku,
       qty: line.qty,
       unitPriceCents: prefetched.get(line.sku) ?? 0,
     }));
-    await fetch(`${ordersUrl}/v1/orders`, {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({
-        orderId: failedId,
-        tenant: cart.tenant,
-        cartId: cart.id,
-        amountMinor: priced.totalMinor,
-        traceId: id,
-        status: "out_of_stock",
-        items: failedItems,
-      }),
-    }).catch(() => undefined);
+    try {
+      const stored = await fetch(`${ordersUrl}/v1/orders`, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          orderId: failedId,
+          tenant: cart.tenant,
+          cartId: cart.id,
+          amountMinor: priced.totalMinor,
+          traceId: id,
+          status: "out_of_stock",
+          items: failedItems,
+        }),
+      });
+      if (!stored.ok) {
+        console.error(`orbit checkout: out_of_stock order ${failedId} was not stored (${stored.status})`);
+      }
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      console.error(`orbit checkout: out_of_stock order ${failedId} was not stored: ${message}`);
+    }
     spans.push({ name: "checkout.place_order", service: "checkout", durationMs: Date.now() - started, status: "ERROR" });
     emitTrace({ traceId: id, root: "checkout.place_order", status: "ERROR", durationMs: Date.now() - started, startedAt, spans });
     emitMetric({ timestamp: new Date().toISOString(), service: "checkout", ok: false, latencyMs: Date.now() - started });
@@ -134,8 +155,7 @@ listen(port, async (req, res) => {
     return;
   }
 
-  const orderId = `ORD-${orderSequence}`;
-  orderSequence += 1;
+  const orderId = await allocateOrderId();
   const orderStarted = Date.now();
   const orderResponse = await fetch(`${ordersUrl}/v1/orders`, {
     method: "POST",
@@ -153,6 +173,9 @@ listen(port, async (req, res) => {
       })),
     }),
   });
+  if (!orderResponse.ok) {
+    console.error(`orbit checkout: order ${orderId} was not stored (${orderResponse.status})`);
+  }
   const orderBody = (await orderResponse.json()) as {
     router: string;
     version: string;

@@ -43,6 +43,8 @@ export NEXUS_RO_PASSWORD="$(cat live/db/.nexus_ro_password)"
 
 `ORBIT_DATABASE_URL` is read by order-service and payments-gateway. `ORBIT_OPENSEARCH_URL` is read by observability (no auth). `GET /logs` still reads the in-memory tape. The same lines are bulk-shipped to daily index `orbit-logs-YYYY.MM.DD`.
 
+Checkout does not keep its own `ORD-55120` counter. It asks order-service for the next id (`POST /v1/order-ids`). On startup, order-service moves that counter to one past the highest `ORD-` number already in Postgres, including ids such as `ORD-66381-a2`. A restart then keeps inserting new orders. A payment is stored only when that order was created during the current order-service process. An insert that would overwrite an older order, or attach a payment to one, is written to the service log (`orbit ledger: ...`) and rejected. With `ORBIT_DATABASE_URL` unset, ids still start at `ORD-55120` in memory.
+
 `make live` starts Postgres in Compose and sets `ORBIT_DATABASE_URL` for orders and payments. The Compose role password is the demo value `orbit-demo-ro`. OpenSearch is a Compose profile, published on `127.0.0.1:59282`:
 
 ```bash

@@ -261,7 +261,7 @@ Ingest (`POST` on port 4490 inside the compose network) is not published to the 
 
 ## Optional stores
 
-When `ORBIT_DATABASE_URL` is unset, order and payment rows stay in the service process. When it is set (`postgresql://USER@127.0.0.1:5432/orbit`), order-service and payments-gateway write the tables in `live/db/schema.sql`. `GET /api/orders?tenant=t_brightline` on the storefront reads them back through order-service. The browser order history merges that list with orders kept in `localStorage`.
+When `ORBIT_DATABASE_URL` is unset, order and payment rows stay in the service process and checkout ids start at `ORD-55120`. When it is set (`postgresql://USER@127.0.0.1:5432/orbit`), order-service and payments-gateway write the tables in `live/db/schema.sql`. Checkout allocates ids with `POST /v1/order-ids` on order-service, which continues past the highest `ORD-` id already stored. Payments are not attached to orders from a previous process. A conflicting insert is logged and rejected. `GET /api/orders?tenant=t_brightline` on the storefront reads the rows back through order-service. The browser order history merges that list with orders kept in `localStorage`.
 
 `GET /logs` is unchanged: `timestamp`, `service`, `host`, `level`, and `line`. When `ORBIT_OPENSEARCH_URL` is set, the same ingest is also bulk-indexed to `orbit-logs-YYYY.MM.DD`. Failures increment a drop counter and do not block the request. `GET /health` then adds `opensearch.shipped` and `opensearch.dropped`.
 
